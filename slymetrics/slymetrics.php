@@ -3,7 +3,7 @@
  * Plugin Name: SlyMetrics
  * Plugin URI: https://github.com/slydlake/slymetrics
  * Description: Export comprehensive WordPress metrics in Prometheus format for monitoring and observability.
- * Version: 1.3.7
+ * Version: 1.3.8
  * Requires at least: 5.0
  * Requires PHP: 7.4
  * Author: Timon Först

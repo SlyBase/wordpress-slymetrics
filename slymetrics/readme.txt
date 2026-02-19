@@ -2,8 +2,8 @@
 Contributors: timonf
 Tags: prometheus, metrics, monitoring, observability, performance
 Requires at least: 5.0
-Tested up to: 6.8
-Stable tag: 1.3.7
+Tested up to: 6.9
+Stable tag: 1.3.8
 Requires PHP: 7.4
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -145,6 +145,9 @@ Yes! All metrics include site labels, making it perfect for monitoring multi-sit
 
 == Changelog ==
 
+= 1.3.8 =
+* **✅ WordPress 6.9 Compatibility**: Verified compatibility and updated plugin metadata for WordPress 6.9
+
 = 1.3.7 =
 * **🌍 UTF-8 Character Support**: Fixed label encoding to properly support umlauts and special characters (e.g., ö, ä, ü, é, etc.)
 
@@ -244,6 +247,9 @@ Yes! All metrics include site labels, making it perfect for monitoring multi-sit
 * Multiple endpoint options for compatibility
 
 == Upgrade Notice ==
+
+= 1.3.8 =
+WordPress 6.9 compatibility update: Plugin metadata now declares testing with WordPress 6.9.
 
 = 1.3.6 =
 Headless WordPress support: Plugin now auto-initializes on first request without requiring admin access. Perfect for containerized, and Kubernetes deployments where wp-admin is never accessed.
