@@ -1,0 +1,223 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: SlyMetrics - Metrics Exporter for Prometheus 1.3.9\n"
+"Report-Msgid-Bugs-To: https://github.com/slydlake/slymetrics/issues\n"
+"POT-Creation-Date: 2026-04-14 00:00+0200\n"
+"PO-Revision-Date: 2026-04-14 00:00+0200\n"
+"Last-Translator: GitHub Copilot <copilot@github.com>\n"
+"Language-Team: Deutsch\n"
+"Language: de_DE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Authentication required for metrics endpoint."
+msgstr "Authentifizierung für den Metrik-Endpunkt erforderlich."
+
+msgid "SlyMetrics Settings"
+msgstr "SlyMetrics Einstellungen"
+
+msgid "SlyMetrics"
+msgstr "SlyMetrics"
+
+msgid "Settings"
+msgstr "Einstellungen"
+
+msgid "Bearer Token and API Key successfully regenerated!"
+msgstr "Bearer Token und API-Schlüssel erfolgreich neu generiert!"
+
+msgid "API Key successfully regenerated! Bearer Token is managed via environment variable."
+msgstr "API-Schlüssel erfolgreich neu generiert! Bearer Token wird über eine Umgebungsvariable verwaltet."
+
+msgid "Kopiert!"
+msgstr "Kopiert!"
+
+msgid "Endpoint Information"
+msgstr "Endpunkt-Informationen"
+
+msgid "Primary Metrics Endpoint (Clean URL):"
+msgstr "Primärer Metrik-Endpunkt (saubere URL):"
+
+msgid "Recommended endpoint with clean URL structure. Works out-of-the-box with WordPress permalinks enabled."
+msgstr "Empfohlener Endpunkt mit sauberer URL-Struktur. Funktioniert ohne Konfiguration, wenn WordPress-Permalinks aktiviert sind."
+
+msgid "Alternative Endpoints (Fallback)"
+msgstr "Alternative Endpunkte (Fallback)"
+
+msgid "If the primary endpoint is not working, use these alternative URLs:"
+msgstr "Falls der primäre Endpunkt nicht funktioniert, verwende diese alternativen URLs:"
+
+msgid "REST API Endpoint:"
+msgstr "REST-API-Endpunkt:"
+
+msgid "REST API Fallback:"
+msgstr "REST-API-Fallback:"
+
+msgid "(always works)"
+msgstr "(funktioniert immer)"
+
+msgid "Query Parameter:"
+msgstr "Query-Parameter:"
+
+msgid "All endpoints are protected by authentication and return the same metrics data in Prometheus format."
+msgstr "Alle Endpunkte sind durch Authentifizierung geschützt und geben dieselben Metriken im Prometheus-Format zurück."
+
+msgid "Security:"
+msgstr "Sicherheit:"
+
+#. translators: %s: environment variable name
+msgid "Encryption key is loaded from environment variable %s for enhanced security."
+msgstr "Verschlüsselungsschlüssel wird aus der Umgebungsvariable %s geladen (erhöhte Sicherheit)."
+
+msgid "Authentication Tokens"
+msgstr "Authentifizierungs-Token"
+
+msgid "Bearer Token"
+msgstr "Bearer Token"
+
+msgid "For Authorization header:"
+msgstr "Für Authorization-Header:"
+
+msgid "API Key"
+msgstr "API-Schlüssel"
+
+msgid "As URL parameter:"
+msgstr "Als URL-Parameter:"
+
+msgid "Bearer Token from Environment:"
+msgstr "Bearer Token aus Umgebungsvariable:"
+
+msgid "The Bearer Token is managed via environment variable and cannot be regenerated through the web interface. API Key can still be regenerated below."
+msgstr "Der Bearer Token wird über eine Umgebungsvariable verwaltet und kann nicht über die Weboberfläche erneuert werden. Der API-Schlüssel kann unten weiterhin erneuert werden."
+
+msgid "Regenerate API Key"
+msgstr "API-Schlüssel erneuern"
+
+msgid "Are you sure? Existing API Key configurations will need to be updated."
+msgstr "Bist du sicher? Bestehende API-Schlüssel-Konfigurationen müssen aktualisiert werden."
+
+msgid "Regenerate Tokens"
+msgstr "Token erneuern"
+
+msgid "Are you sure? Existing configurations will need to be updated."
+msgstr "Bist du sicher? Bestehende Konfigurationen müssen aktualisiert werden."
+
+msgid "Authentication Methods"
+msgstr "Authentifizierungsmethoden"
+
+msgid "WordPress Admin:"
+msgstr "WordPress-Administrator:"
+
+msgid "Logged-in administrators have automatic access"
+msgstr "Eingeloggte Administratoren haben automatisch Zugriff"
+
+msgid "Bearer Token:"
+msgstr "Bearer Token:"
+
+msgid "Recommended for Prometheus and other monitoring tools (encrypted storage)"
+msgstr "Empfohlen für Prometheus und andere Monitoring-Tools (verschlüsselte Speicherung)"
+
+msgid "API Key:"
+msgstr "API-Schlüssel:"
+
+msgid "Simple for testing and URL-based access (encrypted storage)"
+msgstr "Einfach für Tests und URL-basierten Zugriff (verschlüsselte Speicherung)"
+
+msgid "Security Configuration"
+msgstr "Sicherheitskonfiguration"
+
+msgid "Environment Key:"
+msgstr "Umgebungsschlüssel:"
+
+#. translators: %s: environment variable name
+msgid "Using encryption key from %s environment variable"
+msgstr "Verwendet Verschlüsselungsschlüssel aus der Umgebungsvariable %s"
+
+#. translators: %s: environment variable name
+msgid "Can be provided via %s environment variable"
+msgstr "Kann über die Umgebungsvariable %s bereitgestellt werden"
+
+msgid "Enhanced Security:"
+msgstr "Erweiterte Sicherheit:"
+
+msgid "Environment variables are not stored in database and cannot be accessed via web interface"
+msgstr "Umgebungsvariablen werden nicht in der Datenbank gespeichert und sind nicht über die Weboberfläche zugänglich"
+
+msgid "Database Key:"
+msgstr "Datenbankschlüssel:"
+
+msgid "Encryption key is auto-generated and stored in WordPress database"
+msgstr "Verschlüsselungsschlüssel wird automatisch generiert und in der WordPress-Datenbank gespeichert"
+
+msgid "Enhanced Security Option:"
+msgstr "Option für erweiterte Sicherheit:"
+
+#. translators: %1$s: first env var name, %2$s: second env var name
+msgid "Set %1$s and %2$s environment variables for better security"
+msgstr "Setze die Umgebungsvariablen %1$s und %2$s für mehr Sicherheit"
+
+msgid "Environment Variable Setup"
+msgstr "Konfiguration der Umgebungsvariablen"
+
+msgid "For production environments, use environment variables for enhanced security:"
+msgstr "Für Produktionsumgebungen werden Umgebungsvariablen für erhöhte Sicherheit empfohlen:"
+
+msgid "Docker"
+msgstr "Docker"
+
+msgid "Kubernetes"
+msgstr "Kubernetes"
+
+msgid "Environment Variables:"
+msgstr "Umgebungsvariablen:"
+
+#. translators: %s: environment variable name
+msgid "%s - Base64 encoded encryption key for API keys"
+msgstr "%s – Base64-kodierter Verschlüsselungsschlüssel für API-Schlüssel"
+
+#. translators: %s: environment variable name
+msgid "%s - Bearer token for SlyMetrics authentication (plain text)"
+msgstr "%s – Bearer Token für die SlyMetrics-Authentifizierung (Klartext)"
+
+msgid "More Examples:"
+msgstr "Weitere Beispiele:"
+
+msgid "See GitHub Documentation"
+msgstr "GitHub-Dokumentation ansehen"
+
+msgid "Usage Examples"
+msgstr "Verwendungsbeispiele"
+
+msgid "Primary Endpoint (Clean URL)"
+msgstr "Primärer Endpunkt (saubere URL)"
+
+msgid "cURL with Bearer Token"
+msgstr "cURL mit Bearer Token"
+
+msgid "cURL with API Key"
+msgstr "cURL mit API-Schlüssel"
+
+msgid "Fallback Endpoints"
+msgstr "Fallback-Endpunkte"
+
+msgid "REST API Endpoint"
+msgstr "REST-API-Endpunkt"
+
+msgid "Universal Fallback (Always Works)"
+msgstr "Universeller Fallback (funktioniert immer)"
+
+msgid "Prometheus Configuration"
+msgstr "Prometheus-Konfiguration"
+
+msgid "Primary Configuration"
+msgstr "Primäre Konfiguration"
+
+msgid "REST API Fallback Configuration"
+msgstr "REST-API-Fallback-Konfiguration"
+
+msgid "Universal Fallback Configuration (Always Works)"
+msgstr "Universelle Fallback-Konfiguration (funktioniert immer)"
+
+msgid "Copy"
+msgstr "Kopieren"

@@ -2,8 +2,8 @@
 Contributors: timonf
 Tags: prometheus, metrics, monitoring, observability, performance
 Requires at least: 5.0
-Tested up to: 6.9
-Stable tag: 1.3.8
+Tested up to: 7.0
+Stable tag: 1.4.0
 Requires PHP: 7.4
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -144,6 +144,14 @@ Yes! All metrics include site labels, making it perfect for monitoring multi-sit
 6. Grafana dashboard selectable Websites
 
 == Changelog ==
+
+= 1.4.0 =
+* **✅ WordPress 7.0 Compatibility**: Verified compatibility with WordPress 7.0
+* **🌍 Internationalization (i18n)**: Plugin is now fully translatable using the WordPress translation system
+* **🇩🇪 German Translation**: Complete German (de_DE) translation included out-of-the-box
+* **📦 Translation Files**: Added `languages/slymetrics.pot` (template), `slymetrics-de_DE.po`, and compiled `slymetrics-de_DE.mo`
+* **🔤 Text Domain**: All admin UI strings, error messages, and dialogs are now wrapped with `__()` / `esc_html_e()` / `esc_attr_e()`
+* **⚙️ Domain Path**: Added `Domain Path: /languages` to plugin header for proper translation loading
 
 = 1.3.8 =
 * **✅ WordPress 6.9 Compatibility**: Verified compatibility and updated plugin metadata for WordPress 6.9

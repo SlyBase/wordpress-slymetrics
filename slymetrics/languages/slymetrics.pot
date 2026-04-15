@@ -1,0 +1,294 @@
+# Copyright (C) 2026 Timon Först
+# This file is distributed under the MIT license.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SlyMetrics - Metrics Exporter for Prometheus 1.3.9\n"
+"Report-Msgid-Bugs-To: https://github.com/slydlake/slymetrics/issues\n"
+"POT-Creation-Date: 2026-04-14 00:00+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: slymetrics/slymetrics.php (check_auth)
+msgid "Authentication required for metrics endpoint."
+msgstr ""
+
+#: slymetrics/slymetrics.php (add_admin_menu)
+msgid "SlyMetrics Settings"
+msgstr ""
+
+#: slymetrics/slymetrics.php (add_admin_menu)
+msgid "SlyMetrics"
+msgstr ""
+
+#: slymetrics/slymetrics.php (add_plugin_action_links)
+msgid "Settings"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_init)
+msgid "Bearer Token and API Key successfully regenerated!"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_init)
+msgid "API Key successfully regenerated! Bearer Token is managed via environment variable."
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_enqueue_scripts)
+msgid "Kopiert!"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Endpoint Information"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Primary Metrics Endpoint (Clean URL):"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Recommended endpoint with clean URL structure. Works out-of-the-box with WordPress permalinks enabled."
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Alternative Endpoints (Fallback)"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "If the primary endpoint is not working, use these alternative URLs:"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "REST API Endpoint:"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "REST API Fallback:"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "(always works)"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Query Parameter:"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "All endpoints are protected by authentication and return the same metrics data in Prometheus format."
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Security:"
+msgstr ""
+
+#. translators: %s: environment variable name
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Encryption key is loaded from environment variable %s for enhanced security."
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Authentication Tokens"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Bearer Token"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "For Authorization header:"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "API Key"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "As URL parameter:"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Bearer Token from Environment:"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "The Bearer Token is managed via environment variable and cannot be regenerated through the web interface. API Key can still be regenerated below."
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Regenerate API Key"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Are you sure? Existing API Key configurations will need to be updated."
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Regenerate Tokens"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Are you sure? Existing configurations will need to be updated."
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Authentication Methods"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "WordPress Admin:"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Logged-in administrators have automatic access"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Bearer Token:"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Recommended for Prometheus and other monitoring tools (encrypted storage)"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "API Key:"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Simple for testing and URL-based access (encrypted storage)"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Security Configuration"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Environment Key:"
+msgstr ""
+
+#. translators: %s: environment variable name
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Using encryption key from %s environment variable"
+msgstr ""
+
+#. translators: %s: environment variable name
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Can be provided via %s environment variable"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Enhanced Security:"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Environment variables are not stored in database and cannot be accessed via web interface"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Database Key:"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Encryption key is auto-generated and stored in WordPress database"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Enhanced Security Option:"
+msgstr ""
+
+#. translators: %1$s: first env var name, %2$s: second env var name
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Set %1$s and %2$s environment variables for better security"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Environment Variable Setup"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "For production environments, use environment variables for enhanced security:"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Docker"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Kubernetes"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Environment Variables:"
+msgstr ""
+
+#. translators: %s: environment variable name
+#: slymetrics/slymetrics.php (admin_page)
+msgid "%s - Base64 encoded encryption key for API keys"
+msgstr ""
+
+#. translators: %s: environment variable name
+#: slymetrics/slymetrics.php (admin_page)
+msgid "%s - Bearer token for SlyMetrics authentication (plain text)"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "More Examples:"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "See GitHub Documentation"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Usage Examples"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Primary Endpoint (Clean URL)"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "cURL with Bearer Token"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "cURL with API Key"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Fallback Endpoints"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "REST API Endpoint"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Universal Fallback (Always Works)"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Prometheus Configuration"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Primary Configuration"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "REST API Fallback Configuration"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Universal Fallback Configuration (Always Works)"
+msgstr ""
+
+#: slymetrics/slymetrics.php (admin_page)
+msgid "Copy"
+msgstr ""

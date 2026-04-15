@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: SlyMetrics
+ * Plugin Name: SlyMetrics - Metrics Exporter for Prometheus
  * Plugin URI: https://github.com/slydlake/slymetrics
  * Description: Export comprehensive WordPress metrics in Prometheus format for monitoring and observability.
- * Version: 1.3.8
+ * Version: 1.4.0
  * Requires at least: 5.0
  * Requires PHP: 7.4
  * Author: Timon Först
@@ -11,6 +11,7 @@
  * License: MIT
  * License URI: https://opensource.org/licenses/MIT
  * Text Domain: slymetrics
+ * Domain Path: /languages
  *
  * @package SlyMetrics
  * @author Timon Först
@@ -58,29 +59,39 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
             add_filter( 'rest_pre_serve_request', array( __CLASS__, 'rest_pre_serve_request' ), 10, 4 );
             register_activation_hook( __FILE__, array( __CLASS__, 'on_activate' ) );
             register_deactivation_hook( __FILE__, array( __CLASS__, 'on_deactivate' ) );
-            
+
             // Admin interface
             add_action( 'admin_menu', array( __CLASS__, 'add_admin_menu' ) );
             add_action( 'admin_init', array( __CLASS__, 'admin_init' ) );
             add_action( 'admin_enqueue_scripts', array( __CLASS__, 'admin_enqueue_scripts' ) );
-            
+
             // Add settings link to plugin page
             add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( __CLASS__, 'add_plugin_action_links' ) );
-            
+
             // Register custom rewrite rules for slymetrics endpoints
             add_action( 'init', array( __CLASS__, 'add_rewrite_rules' ) );
             add_filter( 'query_vars', array( __CLASS__, 'add_query_vars' ) );
-            
+
             // Single unified metrics handler (early interception for all URL patterns)
             // Use plugins_loaded to ensure we catch the request before WordPress processes it
             add_action( 'plugins_loaded', array( __CLASS__, 'early_metrics_check' ), 1 );
             add_action( 'parse_request', array( __CLASS__, 'handle_metrics_request' ) );
-            
+
             // Ensure plugin is initialized on every init (handles new installations without admin access)
             add_action( 'init', array( __CLASS__, 'ensure_plugin_initialized' ), 1 );
-            
+
             // Check and refresh rewrite rules if needed (admin only)
             add_action( 'admin_init', array( __CLASS__, 'maybe_flush_rewrite_rules' ) );
+
+            // Load plugin translations
+            add_action( 'init', array( __CLASS__, 'load_textdomain' ) );
+        }
+
+        /**
+         * Load plugin text domain for translations.
+         */
+        public static function load_textdomain() {
+            load_plugin_textdomain( 'slymetrics', false, dirname( plugin_basename( SLYMET_PLUGIN_FILE ) ) . '/languages' );
         }
 
         /**
@@ -108,7 +119,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
          */
         private static function extract_auth_header( $request = null ) {
             $auth_header = false;
-            
+
             // Try REST request first if provided
             if ( $request ) {
                 $auth_header = $request->get_header( 'authorization' );
@@ -116,12 +127,12 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                     $auth_header = $request->get_header( 'HTTP_AUTHORIZATION' );
                 }
             }
-            
+
             // Fallback to server variables
             if ( ! $auth_header && isset( $_SERVER['HTTP_AUTHORIZATION'] ) ) {
                 $auth_header = sanitize_text_field( wp_unslash( $_SERVER['HTTP_AUTHORIZATION'] ) );
             }
-            
+
             // Last resort: getallheaders()
             if ( ! $auth_header && function_exists( 'getallheaders' ) ) {
                 $headers = getallheaders();
@@ -129,7 +140,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                     $auth_header = $headers['Authorization'];
                 }
             }
-            
+
             return $auth_header;
         }
 
@@ -143,7 +154,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
         public static function check_auth( $request ) {
             // Option 1: Bearer Token in Authorization header
             $auth_header = self::extract_auth_header( $request );
-            
+
             if ( $auth_header && preg_match( '/Bearer\s+(.+)/', $auth_header, $matches ) ) {
                 $token = trim( $matches[1] );
                 $valid_token = self::get_auth_token( 'slymetrics_auth_token' );
@@ -166,10 +177,10 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                 return true;
             }
 
-            return new WP_Error( 
-                'rest_forbidden', 
-                __( 'Authentication required for metrics endpoint.', 'slymetrics' ), 
-                array( 'status' => 401 ) 
+            return new WP_Error(
+                'rest_forbidden',
+                __( 'Authentication required for metrics endpoint.', 'slymetrics' ),
+                array( 'status' => 401 )
             );
         }
 
@@ -184,19 +195,19 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                 self::serve_metrics_response();
                 return;
             }
-            
+
             // Also check for direct path access
             $request_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
             $parsed_url = wp_parse_url( $request_uri );
             $path = isset( $parsed_url['path'] ) ? trim( $parsed_url['path'], '/' ) : '';
-            
+
             // Check for path-based patterns
             $metrics_paths = array(
                 'slymetrics/metrics',
                 'slymetrics',
                 'metrics'
             );
-            
+
             if ( in_array( $path, $metrics_paths, true ) ) {
                 self::serve_metrics_response();
                 return;
@@ -214,31 +225,31 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
             $request_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
             $parsed_url = wp_parse_url( $request_uri );
             $path = isset( $parsed_url['path'] ) ? trim( $parsed_url['path'], '/' ) : '';
-            
+
             // Additional security: validate path contains only safe characters
             if ( ! empty( $path ) && ! preg_match( '/^[a-zA-Z0-9\/_-]+$/', $path ) ) {
                 self::log_error( 'Invalid characters in request path', array( 'path' => $path, 'ip' => self::get_client_ip() ) );
                 return;
             }
-            
+
             // Check for query parameter pattern first
             // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public metrics endpoint with custom authentication
             if ( isset( $_GET['slymetrics'] ) || isset( $_GET['slybase_metrics'] ) ) {
                 self::serve_metrics_response();
                 return;
             }
-            
+
             // Check for path-based patterns
             $metrics_paths = array(
                 'slymetrics/metrics',
                 'slymetrics'
             );
-            
+
             if ( in_array( $path, $metrics_paths, true ) ) {
                 self::serve_metrics_response();
                 return;
             }
-            
+
             // Check for query variable pattern (rewrite rules)
             $endpoint = get_query_var( 'slymetrics_endpoint' );
             if ( $endpoint === 'metrics' ) {
@@ -258,12 +269,12 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
             if ( $site_host && isset( $_SERVER['HTTP_HOST'] ) && $_SERVER['HTTP_HOST'] !== $site_host ) {
                 $_SERVER['HTTP_HOST'] = $site_host;
             }
-            
+
             // Simple rate limiting check
             $client_ip = self::get_client_ip();
             $rate_limit_key = 'slymetrics_rate_limit_' . md5( $client_ip );
             $current_requests = (int) get_transient( $rate_limit_key );
-            
+
             // Allow maximum 60 requests per minute per IP
             if ( $current_requests >= 60 ) {
                 status_header( 429 );
@@ -272,27 +283,27 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                 header( 'X-RateLimit-Limit: 60' );
                 header( 'X-RateLimit-Remaining: 0' );
                 header( 'X-RateLimit-Reset: ' . ( time() + 60 ) );
-                
+
                 self::log_error( 'Rate limit exceeded', array( 'ip' => $client_ip, 'requests' => $current_requests ) );
-                
+
                 // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON error response
                 echo wp_json_encode( array( 'error' => 'Rate limit exceeded. Please try again later.' ) );
                 exit;
             }
-            
+
             // Increment request counter
             set_transient( $rate_limit_key, $current_requests + 1, 60 );
-            
+
             // Create a fake REST request for authentication
             $fake_request = new WP_REST_Request( 'GET', '/slymetrics/v1/metrics' );
-            
+
             // Copy API key from query parameters
             // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public metrics endpoint with custom authentication
             if ( isset( $_GET['api_key'] ) ) {
                 // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public metrics endpoint with custom authentication
                 $fake_request->set_param( 'api_key', sanitize_text_field( wp_unslash( $_GET['api_key'] ) ) );
             }
-            
+
             // Check authentication
             $auth_result = self::check_auth( $fake_request );
             if ( is_wp_error( $auth_result ) ) {
@@ -304,10 +315,10 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                 ) );
                 exit;
             }
-            
+
             // Serve metrics with cache
             $metrics = self::get_cached_metrics();
-            
+
             // Enhanced security headers
             status_header( 200 );
             header( 'Content-Type: text/plain; charset=' . get_option( 'blog_charset' ) );
@@ -318,7 +329,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
             header( 'Cache-Control: no-cache, no-store, must-revalidate' );
             header( 'Pragma: no-cache' );
             header( 'Expires: 0' );
-            
+
             // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Raw metrics output for Prometheus format
             echo $metrics;
             exit;
@@ -398,15 +409,15 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
         private static function get_cached_metrics() {
             // Try to get cached metrics
             $metrics = get_transient( self::CACHE_KEY );
-            
+
             if ( false === $metrics ) {
                 // Build fresh metrics with segmented caching strategy
                 $metrics = self::build_metrics_with_caching();
-                
+
                 // Cache the complete metrics output
                 set_transient( self::CACHE_KEY, $metrics, self::CACHE_TTL );
             }
-            
+
             return $metrics;
         }
 
@@ -428,7 +439,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                 $fast_metrics .= self::build_post_metrics( $site_name );
                 $fast_metrics .= self::build_plugin_metrics( $site_name );
                 $fast_metrics .= self::build_content_metrics( $site_name );
-                
+
                 set_transient( self::CACHE_KEY . '_fast', $fast_metrics, self::CACHE_TTL );
             }
             $out .= $fast_metrics;
@@ -460,7 +471,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
          */
         private static function build_content_metrics( $site_name ) {
             $out = '';
-            
+
             // Comments
             $comments = wp_count_comments();
             // Ensure we have an array of status => count
@@ -505,7 +516,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
             $out .= "# HELP wordpress_tags_total Total number of tags.\n";
             $out .= "# TYPE wordpress_tags_total counter\n";
             $out .= self::format_metric( 'wordpress_tags_total', $site_name, array(), $tag_count );
-            
+
             return $out;
         }
 
@@ -520,9 +531,9 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
             if ( false !== $media_count ) {
                 return (int) $media_count;
             }
-            
+
             $media_count = 0;
-            
+
             // Primary method: wp_count_posts
             $attachments = wp_count_posts( 'attachment' );
             if ( is_object( $attachments ) ) {
@@ -531,7 +542,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                     $media_count += (int) $count;
                 }
             }
-            
+
             // Fallback if primary method failed
             if ( $media_count === 0 ) {
                 // Fallback if wp_count_posts unexpectedly doesn't return an object
@@ -541,10 +552,10 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                     'numberposts' => -1,
                 ) ) );
             }
-            
+
             // Cache the result for 5 minutes
             set_transient( 'slymetrics_media_count', $media_count, 300 );
-            
+
             return $media_count;
         }
 
@@ -557,7 +568,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
         private static function build_heavy_metrics( $site_name ) {
             $out = '';
             global $wpdb;
-            
+
             // Database operations with enhanced security
             try {
                 // Enhanced secure autoload query with input validation
@@ -565,26 +576,26 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                     self::log_error( 'Options table not available for autoload calculation' );
                     return $out;
                 }
-                
+
                 // Validate table name to prevent injection
                 $options_table = $wpdb->options;
                 if ( ! preg_match( '/^[a-zA-Z0-9_]+$/', str_replace( $wpdb->prefix, '', $options_table ) ) ) {
                     self::log_error( 'Options table name contains invalid characters', array( 'table' => $options_table ) );
                     return $out;
                 }
-                
+
                 // Get all autoload metrics in a single secure query
                 $sql = $wpdb->prepare(
-                    "SELECT 
+                    "SELECT
                         COUNT(*) as total_count,
                         ROUND(SUM(LENGTH(option_value)) / 1024) as size_kb,
                         SUM(CASE WHEN option_name LIKE %s THEN 1 ELSE 0 END) as transient_count
-                    FROM " . esc_sql( $options_table ) . " 
+                    FROM " . esc_sql( $options_table ) . "
                     WHERE autoload = %s",
                     '%transient%',
                     'yes'
                 );
-                
+
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Metrics data, cached at application level via transients. SQL is prepared above using $wpdb->prepare()
                 $autoload_data = $wpdb->get_row( $sql );
 
@@ -593,17 +604,17 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                     $total_count = max( 0, (int) $autoload_data->total_count );
                     $size_kb = max( 0, (int) $autoload_data->size_kb );
                     $transient_count = max( 0, (int) $autoload_data->transient_count );
-                    
+
                     // Autoload count
                     $out .= "# HELP wordpress_autoload_options_total Number of autoloaded options.\n";
                     $out .= "# TYPE wordpress_autoload_options_total gauge\n";
                     $out .= self::format_metric( 'wordpress_autoload_options_total', $site_name, array(), $total_count );
-                    
+
                     // Autoload size in bytes
                     $out .= "# HELP wordpress_autoload_size_bytes Size of autoloaded options in bytes.\n";
                     $out .= "# TYPE wordpress_autoload_size_bytes gauge\n";
                     $out .= self::format_metric( 'wordpress_autoload_size_bytes', $site_name, array(), ($size_kb * 1024) );
-                    
+
                     // Autoload transient count
                     $out .= "# HELP wordpress_autoload_transients_total Number of autoloaded transients.\n";
                     $out .= "# TYPE wordpress_autoload_transients_total gauge\n";
@@ -620,24 +631,24 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                     self::log_error( 'Database name not available for size calculation' );
                     return $out;
                 }
-                
+
                 // Validate database name to prevent injection
                 $db_name = preg_replace( '/[^a-zA-Z0-9_]/', '', DB_NAME );
                 if ( $db_name !== DB_NAME ) {
                     self::log_error( 'Database name contains invalid characters', array( 'db_name' => DB_NAME ) );
                     return $out;
                 }
-                
+
                 // Secure prepared statement with validated input
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Metrics data, cached at application level via transients
-                $db_size_mb = (float) $wpdb->get_var( $wpdb->prepare( 
-                    "SELECT SUM(ROUND(((data_length + index_length) / 1024 / 1024), 2)) as value 
-                     FROM information_schema.TABLES 
-                     WHERE table_schema = %s 
-                     AND table_type = 'BASE TABLE'", 
-                    $db_name 
+                $db_size_mb = (float) $wpdb->get_var( $wpdb->prepare(
+                    "SELECT SUM(ROUND(((data_length + index_length) / 1024 / 1024), 2)) as value
+                     FROM information_schema.TABLES
+                     WHERE table_schema = %s
+                     AND table_type = 'BASE TABLE'",
+                    $db_name
                 ) );
-                
+
                 if ( $db_size_mb > 0 ) {
                     $out .= "# HELP wordpress_database_size_bytes Database size in bytes.\n";
                     $out .= "# TYPE wordpress_database_size_bytes gauge\n";
@@ -652,7 +663,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
             if ( ! empty( $directory_sizes ) ) {
                 $out .= "# HELP wordpress_directory_size_bytes Directory sizes in bytes.\n";
                 $out .= "# TYPE wordpress_directory_size_bytes gauge\n";
-                
+
                 foreach ( $directory_sizes as $dir_type => $size_mb ) {
                     $out .= self::format_metric( 'wordpress_directory_size_bytes', $site_name, array( 'directory' => $dir_type ), ($size_mb * 1024 * 1024) );
                 }
@@ -663,7 +674,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
             if ( ! empty( $health_check ) ) {
                 $out .= "# HELP wordpress_health_check_total Site health check results.\n";
                 $out .= "# TYPE wordpress_health_check_total gauge\n";
-                
+
                 foreach ( $health_check as $category => $count ) {
                     $out .= self::format_metric( 'wordpress_health_check_total', $site_name, array( 'category' => $category ), $count );
                 }
@@ -674,7 +685,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
             if ( ! empty( $health_details ) ) {
                 $out .= "# HELP wordpress_health_check_detail_info Individual health check test results.\n";
                 $out .= "# TYPE wordpress_health_check_detail_info gauge\n";
-                
+
                 foreach ( $health_details as $test_detail ) {
                     $status_value = 0;
                     switch ( $test_detail['status'] ) {
@@ -688,8 +699,8 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                             $status_value = -1;
                             break;
                     }
-                    
-                    $out .= self::format_metric( 'wordpress_health_check_detail_info', $site_name, array( 
+
+                    $out .= self::format_metric( 'wordpress_health_check_detail_info', $site_name, array(
                         'test_name' => $test_detail['test'],
                         'status' => $test_detail['status'],
                         'category' => $test_detail['category'],
@@ -697,7 +708,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                     ), $status_value );
                 }
             }
-            
+
             return $out;
         }
 
@@ -709,11 +720,11 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
          */
         private static function build_static_metrics( $site_name ) {
             $out = '';
-            
+
             // WordPress Version (safe version)
             $wp_version = get_bloginfo( 'version' );
             $update_available = 0;
-            
+
             // Check for core updates safely
             if ( ! wp_installing() && function_exists( 'get_core_updates' ) ) {
                 try {
@@ -728,10 +739,10 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                     // Ignore errors in update check
                 }
             }
-            
+
             $out .= "# HELP wordpress_version WordPress version information.\n";
             $out .= "# TYPE wordpress_version gauge\n";
-            $out .= self::format_metric( 'wordpress_version', $site_name, array( 
+            $out .= self::format_metric( 'wordpress_version', $site_name, array(
                 'version' => $wp_version,
                 'update_available' => (string) $update_available
             ), 1 );
@@ -740,7 +751,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
             try {
                 $out .= "# HELP wordpress_php_info PHP configuration information.\n";
                 $out .= "# TYPE wordpress_php_info gauge\n";
-                
+
                 // PHP Version - with numeric ID for backwards compatibility
                 $out .= self::format_metric( 'wordpress_php_info', $site_name, array( 'type' => 'version', 'label' => PHP_VERSION ), PHP_VERSION_ID );
                 $out .= self::format_metric( 'wordpress_php_info', $site_name, array( 'type' => 'major_version', 'label' => (string) PHP_MAJOR_VERSION ), PHP_MAJOR_VERSION );
@@ -755,34 +766,34 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                 // Add simple configuration metrics for table display
                 $out .= "# HELP wordpress_config_info WordPress and PHP configuration values.\n";
                 $out .= "# TYPE wordpress_config_info gauge\n";
-                
+
                 // Add specific metrics for table display
                 $out .= "# HELP wordpress_memory_limit_info Memory limit for table display.\n";
                 $out .= "# TYPE wordpress_memory_limit_info gauge\n";
-                
+
                 $out .= "# HELP wordpress_upload_max_info Upload max filesize for table display.\n";
                 $out .= "# TYPE wordpress_upload_max_info gauge\n";
-                
+
                 $out .= "# HELP wordpress_post_max_info Post max size for table display.\n";
                 $out .= "# TYPE wordpress_post_max_info gauge\n";
-                
+
                 $out .= "# HELP wordpress_exec_time_info Max execution time for table display.\n";
                 $out .= "# TYPE wordpress_exec_time_info gauge\n";
 
                 // PHP Configuration values
                 if ( function_exists( 'ini_get' ) ) {
                     $php_configs = array( 'max_input_vars', 'max_execution_time', 'memory_limit', 'max_input_time', 'upload_max_filesize', 'post_max_size' );
-                    
+
                     foreach ( $php_configs as $php_variable ) {
                         $php_value = ini_get( $php_variable );
                         $numeric_value = self::convert_to_bytes( $php_value );
-                        
+
                         // General PHP info metric
                         $out .= self::format_metric( 'wordpress_php_info', $site_name, array( 'type' => $php_variable, 'label' => $php_value ), $numeric_value );
-                        
+
                         // General config metric
                         $out .= self::format_metric( 'wordpress_config_info', $site_name, array( 'config' => $php_variable, 'value' => $php_value ), $numeric_value );
-                        
+
                         // Specific display metrics for table usage
                         if ( $php_variable === 'memory_limit' ) {
                             $out .= self::format_metric( 'wordpress_memory_limit_info', $site_name, array( 'memory_limit' => $php_value ), 1 );
@@ -798,7 +809,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
             } catch ( Exception $e ) {
                 self::log_error( 'Failed to get PHP information', array( 'error' => $e->getMessage() ) );
             }
-            
+
             return $out;
         }
 
@@ -833,23 +844,23 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                 'HTTP_CLIENT_IP',            // Proxy header
                 'REMOTE_ADDR'                // Standard
             );
-            
+
             foreach ( $ip_headers as $header ) {
                 if ( ! empty( $_SERVER[ $header ] ) ) {
                     $ip = sanitize_text_field( wp_unslash( $_SERVER[ $header ] ) );
-                    
+
                     // Handle comma-separated IPs (X-Forwarded-For)
                     if ( strpos( $ip, ',' ) !== false ) {
                         $ip = trim( explode( ',', $ip )[0] );
                     }
-                    
+
                     // Validate IP address
                     if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
                         return $ip;
                     }
                 }
             }
-            
+
             return 'unknown';
         }
 
@@ -867,16 +878,16 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                 $value = substr( $value, 0, 1000 ) . '...';
                 self::log_error( 'Label value truncated due to excessive length', array( 'original_length' => strlen( $value ) ) );
             }
-            
+
             // Decode HTML entities first (e.g., &#039; to ', &quot; to ")
             $value = html_entity_decode( $value, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
-            
+
             // Escape special characters for Prometheus format
             $value = str_replace( array( '\\', '"', "\n", "\r", "\t" ), array( '\\\\', '\\"', '\\n', '\\r', '\\t' ), $value );
-            
+
             // Remove control characters but keep UTF-8 characters (allows umlauts, accents, etc.)
             $value = preg_replace( '/[\x00-\x1F\x7F]/', '', $value ); // Remove only control characters
-            
+
             return $value;
         }
 
@@ -897,15 +908,15 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                 self::log_error( 'Invalid metric name provided', array( 'original' => $metric_name ) );
                 return '';
             }
-            
+
             // Validate numeric value
             if ( ! is_numeric( $value ) ) {
                 self::log_error( 'Non-numeric value provided for metric', array( 'metric' => $metric_name, 'value' => $value ) );
                 $value = 0;
             }
-            
+
             $label_string = 'wordpress_site="' . self::escape_label_value( $site_name ) . '"';
-            
+
             foreach ( $labels as $key => $label_value ) {
                 // Validate label key
                 $key = preg_replace( '/[^a-zA-Z0-9_]/', '_', (string) $key );
@@ -913,7 +924,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                     $label_string .= ',' . $key . '="' . self::escape_label_value( $label_value ) . '"';
                 }
             }
-            
+
             return $metric_name . '{' . $label_string . '} ' . $value . "\n";
         }
 
@@ -925,7 +936,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
          */
         private static function build_plugin_metrics( $site_name ) {
             $out = '';
-            
+
             // Active plugins - ensure get_plugins function is available
             if ( ! function_exists( 'get_plugins' ) ) {
                 require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -981,7 +992,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
             $out .= "# TYPE wordpress_themes_total counter\n";
             $out .= self::format_metric( 'wordpress_themes_total', $site_name, array( 'type' => 'child' ), $child_count );
             $out .= self::format_metric( 'wordpress_themes_total', $site_name, array( 'type' => 'parent' ), $parent_count );
-            
+
             return $out;
         }
 
@@ -993,7 +1004,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
          */
         private static function build_post_metrics( $site_name ) {
             $out = '';
-            
+
             // Posts (default post type)
             $posts = wp_count_posts();
             $posts_pub = isset( $posts->publish ) ? (int) $posts->publish : 0;
@@ -1022,7 +1033,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
             $out .= self::format_metric( 'wordpress_pages_total', $site_name, array( 'status' => 'published' ), $pages_pub );
             $out .= self::format_metric( 'wordpress_pages_total', $site_name, array( 'status' => 'draft' ), $pages_draft );
             $out .= self::format_metric( 'wordpress_pages_total', $site_name, array( 'status' => 'all' ), ($pages_pub + $pages_draft) );
-            
+
             return $out;
         }
 
@@ -1034,7 +1045,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
          */
         private static function build_user_metrics( $site_name ) {
             $out = '';
-            
+
             // Users
             $users = count_users();
             $total_users = isset( $users['total_users'] ) ? (int) $users['total_users'] : 0;
@@ -1050,7 +1061,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
 
             // Total as separate line (optional)
             $out .= self::format_metric( 'wordpress_users_total', $site_name, array( 'role' => 'total' ), $total_users );
-            
+
             return $out;
         }
 
@@ -1070,8 +1081,8 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
          */
         public static function add_admin_menu() {
             add_options_page(
-                'SlyMetrics Settings',
-                'SlyMetrics',
+                __( 'SlyMetrics Settings', 'slymetrics' ),
+                __( 'SlyMetrics', 'slymetrics' ),
                 'manage_options',
                 'slymetrics',
                 array( __CLASS__, 'admin_page' )
@@ -1090,10 +1101,10 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                 admin_url( 'options-general.php?page=slymetrics' ),
                 __( 'Settings', 'slymetrics' )
             );
-            
+
             // Add the settings link at the beginning of the array
             array_unshift( $links, $settings_link );
-            
+
             return $links;
         }
 
@@ -1108,13 +1119,13 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                 if ( 'regenerate_tokens' === $action ) {
                     // Regenerate API key (always allowed)
                     self::set_encrypted_option( 'slymetrics_api_key', self::generate_secure_token() );
-                    
+
                     // Only regenerate Bearer token if not using environment key
                     if ( ! self::is_encryption_key_from_env() ) {
                         self::set_encrypted_option( 'slymetrics_auth_token', self::generate_secure_token() );
-                        add_settings_error( 'slymetrics_messages', 'tokens_regenerated', 'Bearer Token and API Key successfully regenerated!', 'updated' );
+                        add_settings_error( 'slymetrics_messages', 'tokens_regenerated', __( 'Bearer Token and API Key successfully regenerated!', 'slymetrics' ), 'updated' );
                     } else {
-                        add_settings_error( 'slymetrics_messages', 'api_key_regenerated', 'API Key successfully regenerated! Bearer Token is managed via environment variable.', 'updated' );
+                        add_settings_error( 'slymetrics_messages', 'api_key_regenerated', __( 'API Key successfully regenerated! Bearer Token is managed via environment variable.', 'slymetrics' ), 'updated' );
                     }
                 }
             }
@@ -1133,15 +1144,15 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
 
             // Enqueue WordPress admin styles as dependency
             wp_enqueue_style( 'wp-admin' );
-            
+
             // Add inline CSS for admin page styling
             $admin_css = '
                 .slymetrics-admin-wrap { max-width: none !important; margin-right: 20px; }
-                .slymetrics-card { 
-                    background: #fff !important; 
-                    border: 1px solid #ccd0d4 !important; 
-                    padding: 20px !important; 
-                    margin: 20px 0 !important; 
+                .slymetrics-card {
+                    background: #fff !important;
+                    border: 1px solid #ccd0d4 !important;
+                    padding: 20px !important;
+                    margin: 20px 0 !important;
                     width: calc(100% - 40px) !important;
                     max-width: none !important;
                     box-sizing: border-box !important;
@@ -1168,18 +1179,20 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                 }
             ';
             wp_add_inline_style( 'wp-admin', $admin_css );
-            
+
             // Enqueue jQuery as dependency for our script
             wp_enqueue_script( 'jquery' );
-            
+
             // Add inline JavaScript for copy functionality
+            $copied_text = esc_js( __( 'Kopiert!', 'slymetrics' ) );
+
             $admin_js = '
                 function copyToClipboard(elementId) {
                     const element = document.getElementById(elementId);
                     if (!element) return;
-                    
+
                     let text = "";
-                    
+
                     // Handle different element types
                     if (element.tagName === "PRE") {
                         text = element.textContent || element.innerText;
@@ -1190,10 +1203,10 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                     } else {
                         text = element.textContent || element.innerText || element.value;
                     }
-                    
+
                     // Clean up the text
                     text = text.trim();
-                    
+
                     // Try modern clipboard API first
                     if (navigator.clipboard && navigator.clipboard.writeText) {
                         navigator.clipboard.writeText(text).then(function() {
@@ -1205,7 +1218,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                         fallbackCopy(text, element);
                     }
                 }
-                
+
                 function fallbackCopy(text, element) {
                     const textarea = document.createElement("textarea");
                     textarea.value = text;
@@ -1214,28 +1227,28 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                     document.body.appendChild(textarea);
                     textarea.focus();
                     textarea.select();
-                    
+
                     try {
                         document.execCommand("copy");
                         showCopyFeedback(element);
                     } catch (err) {
                         console.error("Copy failed:", err);
                     }
-                    
+
                     document.body.removeChild(textarea);
                 }
-                
+
                 function showCopyFeedback(element) {
-                    const button = element.parentNode.querySelector(".slymetrics-copy-btn") || 
+                    const button = element.parentNode.querySelector(".slymetrics-copy-btn") ||
                                   element.parentElement.querySelector(".slymetrics-copy-btn") ||
                                   element.nextElementSibling;
-                    
+
                     if (button) {
                         const originalText = button.textContent;
-                        button.textContent = "Copied!";
+                        button.textContent = "' . $copied_text . '";
                         button.style.backgroundColor = "#00a32a";
                         button.style.color = "white";
-                        
+
                         setTimeout(function() {
                             button.textContent = originalText;
                             button.style.backgroundColor = "";
@@ -1254,106 +1267,132 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
             $auth_settings = self::get_auth_settings();
             $endpoint_url = home_url( '/wp-json/slymetrics/v1/metrics' );
             $is_env_key = self::is_encryption_key_from_env();
-            
+            $copy_text = __( 'Copy', 'slymetrics' );
+
             ?>
             <div class="wrap slymetrics-admin-wrap">
-                <h1>SlyMetrics Settings</h1>
-                
+                <h1><?php esc_html_e( 'SlyMetrics Settings', 'slymetrics' ); ?></h1>
+
                 <?php settings_errors( 'slymetrics_messages' ); ?>
-                
+
                 <div class="slymetrics-card">
-                    <h2>Endpoint Information</h2>
-                    <p><strong>Primary Metrics Endpoint (Clean URL):</strong> <code><?php echo esc_url( home_url( '/slymetrics/metrics' ) ); ?></code></p>
-                    <p><em>Recommended endpoint with clean URL structure. Works out-of-the-box with WordPress permalinks enabled.</em></p>
-                    
-                    <h3>Alternative Endpoints (Fallback)</h3>
-                    <p>If the primary endpoint is not working, use these alternative URLs:</p>
+                    <h2><?php esc_html_e( 'Endpoint Information', 'slymetrics' ); ?></h2>
+                    <p><strong><?php esc_html_e( 'Primary Metrics Endpoint (Clean URL):', 'slymetrics' ); ?></strong> <code><?php echo esc_url( home_url( '/slymetrics/metrics' ) ); ?></code></p>
+                    <p><em><?php esc_html_e( 'Recommended endpoint with clean URL structure. Works out-of-the-box with WordPress permalinks enabled.', 'slymetrics' ); ?></em></p>
+
+                    <h3><?php esc_html_e( 'Alternative Endpoints (Fallback)', 'slymetrics' ); ?></h3>
+                    <p><?php esc_html_e( 'If the primary endpoint is not working, use these alternative URLs:', 'slymetrics' ); ?></p>
                     <ul>
-                        <li><strong>REST API Endpoint:</strong> <code><?php echo esc_url( $endpoint_url ); ?></code></li>
-                        <li><strong>REST API Fallback:</strong> <code><?php echo esc_url( home_url( '/index.php?rest_route=/slymetrics/v1/metrics' ) ); ?></code> <em>(always works)</em></li>
-                        <li><strong>Query Parameter:</strong> <code><?php echo esc_url( home_url( '/?slymetrics=1' ) ); ?></code> <em>(always works)</em></li>
+                        <li><strong><?php esc_html_e( 'REST API Endpoint:', 'slymetrics' ); ?></strong> <code><?php echo esc_url( $endpoint_url ); ?></code></li>
+                        <li><strong><?php esc_html_e( 'REST API Fallback:', 'slymetrics' ); ?></strong> <code><?php echo esc_url( home_url( '/index.php?rest_route=/slymetrics/v1/metrics' ) ); ?></code> <em><?php esc_html_e( '(always works)', 'slymetrics' ); ?></em></li>
+                        <li><strong><?php esc_html_e( 'Query Parameter:', 'slymetrics' ); ?></strong> <code><?php echo esc_url( home_url( '/?slymetrics=1' ) ); ?></code> <em><?php esc_html_e( '(always works)', 'slymetrics' ); ?></em></li>
                     </ul>
-                    
-                    <p><em>All endpoints are protected by authentication and return the same metrics data in Prometheus format.</em></p>
+
+                    <p><em><?php esc_html_e( 'All endpoints are protected by authentication and return the same metrics data in Prometheus format.', 'slymetrics' ); ?></em></p>
                     <?php if ( $is_env_key ): ?>
-                        <p><strong>🔐 Security:</strong> <em>Encryption key is loaded from environment variable <code>SLYMETRICS_ENCRYPTION_KEY</code> for enhanced security.</em></p>
+                        <p><strong>🔐 <?php esc_html_e( 'Security:', 'slymetrics' ); ?></strong> <em><?php
+                            printf(
+                                /* translators: %s: environment variable name */
+                                esc_html__( 'Encryption key is loaded from environment variable %s for enhanced security.', 'slymetrics' ),
+                                '<code>SLYMETRICS_ENCRYPTION_KEY</code>'
+                            );
+                        ?></em></p>
                     <?php endif; ?>
                 </div>
 
                 <div class="slymetrics-card">
-                    <h2>Authentication Tokens</h2>
+                    <h2><?php esc_html_e( 'Authentication Tokens', 'slymetrics' ); ?></h2>
                     <table class="form-table">
                         <tr>
-                            <th scope="row">Bearer Token</th>
+                            <th scope="row"><?php esc_html_e( 'Bearer Token', 'slymetrics' ); ?></th>
                             <td>
                                 <div class="token-field">
                                     <input type="text" class="regular-text" id="bearer-token" value="<?php echo esc_attr( $auth_settings['bearer_token'] ); ?>" readonly onclick="this.select();" />
-                                    <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('bearer-token')">Copy</button>
+                                    <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('bearer-token')"><?php echo esc_html( $copy_text ); ?></button>
                                 </div>
-                                <p class="description">For Authorization header: <code>Authorization: Bearer TOKEN</code></p>
+                                <p class="description"><?php esc_html_e( 'For Authorization header:', 'slymetrics' ); ?> <code>Authorization: Bearer TOKEN</code></p>
                             </td>
                         </tr>
                         <tr>
-                            <th scope="row">API Key</th>
+                            <th scope="row"><?php esc_html_e( 'API Key', 'slymetrics' ); ?></th>
                             <td>
                                 <div class="token-field">
                                     <input type="text" class="regular-text" id="api-key" value="<?php echo esc_attr( $auth_settings['api_key'] ); ?>" readonly onclick="this.select();" />
-                                    <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('api-key')">Copy</button>
+                                    <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('api-key')"><?php echo esc_html( $copy_text ); ?></button>
                                 </div>
-                                <p class="description">As URL parameter: <code>?api_key=KEY</code></p>
+                                <p class="description"><?php esc_html_e( 'As URL parameter:', 'slymetrics' ); ?> <code>?api_key=KEY</code></p>
                             </td>
                         </tr>
                     </table>
-                    
+
                     <?php if ( $is_env_key ): ?>
                         <div class="notice notice-info inline">
-                            <p><strong>Bearer Token from Environment:</strong> The Bearer Token is managed via environment variable and cannot be regenerated through the web interface. API Key can still be regenerated below.</p>
+                            <p><strong><?php esc_html_e( 'Bearer Token from Environment:', 'slymetrics' ); ?></strong> <?php esc_html_e( 'The Bearer Token is managed via environment variable and cannot be regenerated through the web interface. API Key can still be regenerated below.', 'slymetrics' ); ?></p>
                         </div>
                     <?php endif; ?>
-                    
+
                     <form method="post" action="">
                         <?php wp_nonce_field( 'slymetrics_settings' ); ?>
                         <input type="hidden" name="slymetrics_action" value="regenerate_tokens" />
                         <p class="submit">
                             <?php if ( $is_env_key ): ?>
-                                <input type="submit" class="button button-secondary" value="Regenerate API Key" onclick="return confirm('Are you sure? Existing API Key configurations will need to be updated.');" />
+                                <input type="submit" class="button button-secondary" value="<?php esc_attr_e( 'Regenerate API Key', 'slymetrics' ); ?>" onclick="return confirm('<?php echo esc_js( __( 'Are you sure? Existing API Key configurations will need to be updated.', 'slymetrics' ) ); ?>');" />
                             <?php else: ?>
-                                <input type="submit" class="button button-secondary" value="Regenerate Tokens" onclick="return confirm('Are you sure? Existing configurations will need to be updated.');" />
+                                <input type="submit" class="button button-secondary" value="<?php esc_attr_e( 'Regenerate Tokens', 'slymetrics' ); ?>" onclick="return confirm('<?php echo esc_js( __( 'Are you sure? Existing configurations will need to be updated.', 'slymetrics' ) ); ?>');" />
                             <?php endif; ?>
                         </p>
                     </form>
                 </div>
 
                 <div class="slymetrics-card">
-                    <h2>Authentication Methods</h2>
+                    <h2><?php esc_html_e( 'Authentication Methods', 'slymetrics' ); ?></h2>
                     <ul>
-                        <li><strong>WordPress Admin:</strong> Logged-in administrators have automatic access</li>
-                        <li><strong>Bearer Token:</strong> Recommended for Prometheus and other monitoring tools (encrypted storage)</li>
-                        <li><strong>API Key:</strong> Simple for testing and URL-based access (encrypted storage)</li>
+                        <li><strong><?php esc_html_e( 'WordPress Admin:', 'slymetrics' ); ?></strong> <?php esc_html_e( 'Logged-in administrators have automatic access', 'slymetrics' ); ?></li>
+                        <li><strong><?php esc_html_e( 'Bearer Token:', 'slymetrics' ); ?></strong> <?php esc_html_e( 'Recommended for Prometheus and other monitoring tools (encrypted storage)', 'slymetrics' ); ?></li>
+                        <li><strong><?php esc_html_e( 'API Key:', 'slymetrics' ); ?></strong> <?php esc_html_e( 'Simple for testing and URL-based access (encrypted storage)', 'slymetrics' ); ?></li>
                     </ul>
-                    
-                    <h3>Security Configuration</h3>
+
+                    <h3><?php esc_html_e( 'Security Configuration', 'slymetrics' ); ?></h3>
                     <ul>
                         <?php if ( $is_env_key ): ?>
-                            <li><strong>🔐 Environment Key:</strong> Using encryption key from <code>SLYMETRICS_ENCRYPTION_KEY</code> environment variable</li>
-                            <li><strong>Bearer Token:</strong> Can be provided via <code>SLYMETRICS_BEARER_TOKEN</code> environment variable</li>
-                            <li><strong>Enhanced Security:</strong> Environment variables are not stored in database and cannot be accessed via web interface</li>
+                            <li><strong>🔐 <?php esc_html_e( 'Environment Key:', 'slymetrics' ); ?></strong> <?php
+                                printf(
+                                    /* translators: %s: environment variable name */
+                                    esc_html__( 'Using encryption key from %s environment variable', 'slymetrics' ),
+                                    '<code>SLYMETRICS_ENCRYPTION_KEY</code>'
+                                );
+                            ?></li>
+                            <li><strong><?php esc_html_e( 'Bearer Token:', 'slymetrics' ); ?></strong> <?php
+                                printf(
+                                    /* translators: %s: environment variable name */
+                                    esc_html__( 'Can be provided via %s environment variable', 'slymetrics' ),
+                                    '<code>SLYMETRICS_BEARER_TOKEN</code>'
+                                );
+                            ?></li>
+                            <li><strong><?php esc_html_e( 'Enhanced Security:', 'slymetrics' ); ?></strong> <?php esc_html_e( 'Environment variables are not stored in database and cannot be accessed via web interface', 'slymetrics' ); ?></li>
                         <?php else: ?>
-                            <li><strong>Database Key:</strong> Encryption key is auto-generated and stored in WordPress database</li>
-                            <li><strong>Enhanced Security Option:</strong> Set <code>SLYMETRICS_ENCRYPTION_KEY</code> and <code>SLYMETRICS_BEARER_TOKEN</code> environment variables for better security</li>
+                            <li><strong><?php esc_html_e( 'Database Key:', 'slymetrics' ); ?></strong> <?php esc_html_e( 'Encryption key is auto-generated and stored in WordPress database', 'slymetrics' ); ?></li>
+                            <li><strong><?php esc_html_e( 'Enhanced Security Option:', 'slymetrics' ); ?></strong> <?php
+                                printf(
+                                    /* translators: %1$s: first env var name, %2$s: second env var name */
+                                    esc_html__( 'Set %1$s and %2$s environment variables for better security', 'slymetrics' ),
+                                    '<code>SLYMETRICS_ENCRYPTION_KEY</code>',
+                                    '<code>SLYMETRICS_BEARER_TOKEN</code>'
+                                );
+                            ?></li>
                         <?php endif; ?>
                     </ul>
-                    
-                    <h3>Environment Variable Setup</h3>
-                    <p>For production environments, use environment variables for enhanced security:</p>
-                    
-                    <h4>Docker</h4>
+
+                    <h3><?php esc_html_e( 'Environment Variable Setup', 'slymetrics' ); ?></h3>
+                    <p><?php esc_html_e( 'For production environments, use environment variables for enhanced security:', 'slymetrics' ); ?></p>
+
+                    <h4><?php esc_html_e( 'Docker', 'slymetrics' ); ?></h4>
                     <div class="slymetrics-code-block">
                         <code id="docker-example">docker run -e SLYMETRICS_ENCRYPTION_KEY="$(openssl rand -base64 32)" -e SLYMETRICS_BEARER_TOKEN="$(openssl rand -hex 32)" your-wordpress-image</code>
-                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('docker-example')">Copy</button>
+                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('docker-example')"><?php echo esc_html( $copy_text ); ?></button>
                     </div>
-                    
-                    <h4>Kubernetes</h4>
+
+                    <h4><?php esc_html_e( 'Kubernetes', 'slymetrics' ); ?></h4>
                     <div class="slymetrics-code-block">
                         <pre id="k8s-example">env:
   - name: SLYMETRICS_ENCRYPTION_KEY
@@ -1366,50 +1405,62 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
       secretKeyRef:
         name: wordpress-secrets
         key: slymetrics-bearer-token</pre>
-                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('k8s-example')">Copy</button>
+                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('k8s-example')"><?php echo esc_html( $copy_text ); ?></button>
                     </div>
-                    
-                    <p><strong>Environment Variables:</strong></p>
+
+                    <p><strong><?php esc_html_e( 'Environment Variables:', 'slymetrics' ); ?></strong></p>
                     <ul>
-                        <li><code>SLYMETRICS_ENCRYPTION_KEY</code> - Base64 encoded encryption key for API keys</li>
-                        <li><code>SLYMETRICS_BEARER_TOKEN</code> - Bearer token for SlyMetrics authentication (plain text)</li>
+                        <li><?php
+                            printf(
+                                /* translators: %s: environment variable name */
+                                esc_html__( '%s - Base64 encoded encryption key for API keys', 'slymetrics' ),
+                                '<code>SLYMETRICS_ENCRYPTION_KEY</code>'
+                            );
+                        ?></li>
+                        <li><?php
+                            printf(
+                                /* translators: %s: environment variable name */
+                                esc_html__( '%s - Bearer token for SlyMetrics authentication (plain text)', 'slymetrics' ),
+                                '<code>SLYMETRICS_BEARER_TOKEN</code>'
+                            );
+                        ?></li>
                     </ul>
-                    
-                    <p>📖 <strong>More Examples:</strong> <a href="https://github.com/slydlake/wordpress-prometheus-metrics#security-features" target="_blank">See GitHub Documentation</a></p>
+
+                    <p>📖 <strong><?php esc_html_e( 'More Examples:', 'slymetrics' ); ?></strong> <a href="https://github.com/slydlake/wordpress-prometheus-metrics#security-features" target="_blank"><?php esc_html_e( 'See GitHub Documentation', 'slymetrics' ); ?></a></p>
                 </div>
 
                 <div class="slymetrics-card">
-                    <h2>Usage Examples</h2>
-                    
-                    <h3>Primary Endpoint (Clean URL)</h3>
-                    <h4>cURL with Bearer Token</h4>
+                    <h2><?php esc_html_e( 'Usage Examples', 'slymetrics' ); ?></h2>
+
+                    <h3><?php esc_html_e( 'Primary Endpoint (Clean URL)', 'slymetrics' ); ?></h3>
+                    <h4><?php esc_html_e( 'cURL with Bearer Token', 'slymetrics' ); ?></h4>
                     <div class="slymetrics-code-block">
                         <code id="curl-primary">curl -H "Authorization: Bearer <?php echo esc_attr( $auth_settings['bearer_token'] ); ?>" "<?php echo esc_url( home_url( '/slymetrics/metrics' ) ); ?>"</code>
-                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('curl-primary')">Copy</button>
+                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('curl-primary')"><?php echo esc_html( $copy_text ); ?></button>
                     </div>
-                    
-                    <h4>cURL with API Key</h4>
+
+                    <h4><?php esc_html_e( 'cURL with API Key', 'slymetrics' ); ?></h4>
                     <div class="slymetrics-code-block">
                         <code id="curl-apikey-primary">curl "<?php echo esc_url( home_url( '/slymetrics/metrics' ) ); ?>?api_key=<?php echo esc_attr( $auth_settings['api_key'] ); ?>"</code>
-                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('curl-apikey-primary')">Copy</button>
+                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('curl-apikey-primary')"><?php echo esc_html( $copy_text ); ?></button>
                     </div>
-                    
-                    <h3>Fallback Endpoints</h3>
-                    <h4>REST API Endpoint</h4>
+
+                    <h3><?php esc_html_e( 'Fallback Endpoints', 'slymetrics' ); ?></h3>
+                    <h4><?php esc_html_e( 'REST API Endpoint', 'slymetrics' ); ?></h4>
                     <div class="slymetrics-code-block">
                         <code id="curl-rest">curl -H "Authorization: Bearer <?php echo esc_attr( $auth_settings['bearer_token'] ); ?>" "<?php echo esc_url( $endpoint_url ); ?>"</code>
-                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('curl-rest')">Copy</button>
+                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('curl-rest')"><?php echo esc_html( $copy_text ); ?></button>
                     </div>
-                    
-                    <h4>Universal Fallback (Always Works)</h4>
+
+                    <h4><?php esc_html_e( 'Universal Fallback (Always Works)', 'slymetrics' ); ?></h4>
                     <div class="slymetrics-code-block">
                         <code id="curl-fallback">curl -H "Authorization: Bearer <?php echo esc_attr( $auth_settings['bearer_token'] ); ?>" "<?php echo esc_url( home_url( '/?slymetrics=1' ) ); ?>"</code>
-                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('curl-fallback')">Copy</button>
+                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('curl-fallback')"><?php echo esc_html( $copy_text ); ?></button>
                     </div>
-                    
-                    
-                    <h3>Prometheus Configuration</h3>
-                    <h4>Primary Configuration</h4>
+
+
+                    <h3><?php esc_html_e( 'Prometheus Configuration', 'slymetrics' ); ?></h3>
+                    <h4><?php esc_html_e( 'Primary Configuration', 'slymetrics' ); ?></h4>
                     <div class="slymetrics-code-block">
                         <pre id="prometheus-config"># prometheus.yml
 scrape_configs:
@@ -1421,10 +1472,10 @@ scrape_configs:
     authorization:
       type: Bearer
       credentials: '<?php echo esc_attr( $auth_settings['bearer_token'] ); ?>'</pre>
-                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('prometheus-config')">Copy</button>
+                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('prometheus-config')"><?php echo esc_html( $copy_text ); ?></button>
                     </div>
-                    
-                    <h4>REST API Fallback Configuration</h4>
+
+                    <h4><?php esc_html_e( 'REST API Fallback Configuration', 'slymetrics' ); ?></h4>
                     <div class="slymetrics-code-block">
                         <pre id="prometheus-fallback"># prometheus.yml (REST API fallback)
 scrape_configs:
@@ -1436,10 +1487,10 @@ scrape_configs:
     authorization:
       type: Bearer
       credentials: '<?php echo esc_attr( $auth_settings['bearer_token'] ); ?>'</pre>
-                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('prometheus-fallback')">Copy</button>
+                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('prometheus-fallback')"><?php echo esc_html( $copy_text ); ?></button>
                     </div>
-                    
-                    <h4>Universal Fallback Configuration (Always Works)</h4>
+
+                    <h4><?php esc_html_e( 'Universal Fallback Configuration (Always Works)', 'slymetrics' ); ?></h4>
                     <div class="slymetrics-code-block">
                         <pre id="prometheus-alt"># prometheus.yml (universal fallback)
 scrape_configs:
@@ -1453,7 +1504,7 @@ scrape_configs:
     authorization:
       type: Bearer
       credentials: '<?php echo esc_attr( $auth_settings['bearer_token'] ); ?>'</pre>
-                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('prometheus-alt')">Copy</button>
+                        <button type="button" class="button slymetrics-copy-btn" onclick="copyToClipboard('prometheus-alt')"><?php echo esc_html( $copy_text ); ?></button>
                     </div>
                 </div>
             </div>
@@ -1467,7 +1518,7 @@ scrape_configs:
             self::ensure_auth_tokens();
             self::add_rewrite_rules();
             flush_rewrite_rules();
-            
+
             // Mark as initialized
             update_option( 'slymetrics_initialized', true );
             update_option( 'slymetrics_rewrite_rules_flushed', time() );
@@ -1482,10 +1533,10 @@ scrape_configs:
             delete_transient( self::CACHE_KEY . '_fast' );
             delete_transient( self::CACHE_KEY_HEAVY );
             delete_transient( self::CACHE_KEY_STATIC );
-            
+
             // Remove initialization flag
             delete_option( 'slymetrics_initialized' );
-            
+
             // Flush rewrite rules to remove our custom rules
             flush_rewrite_rules();
         }
@@ -1496,7 +1547,7 @@ scrape_configs:
         private static function ensure_auth_tokens() {
             // Ensure encryption key exists first (triggers creation if needed)
             self::get_encryption_key();
-            
+
             if ( ! self::get_decrypted_option( 'slymetrics_auth_token' ) ) {
                 self::set_encrypted_option( 'slymetrics_auth_token', self::generate_secure_token() );
             }
@@ -1532,7 +1583,7 @@ scrape_configs:
                     $raw_key = random_bytes( 32 ); // Generate new proper key
                     $base64_key = base64_encode( $raw_key );
                     update_option( 'slymetrics_encryption_key', $base64_key );
-                    
+
                     // Regenerate tokens since the old ones can't be decrypted properly
                     // Only delete if they actually exist
                     if ( get_option( 'slymetrics_auth_token' ) ) {
@@ -1548,7 +1599,7 @@ scrape_configs:
                 $raw_key = random_bytes( 32 ); // 32 bytes = 256 bits
                 $base64_key = base64_encode( $raw_key );
                 $success = update_option( 'slymetrics_encryption_key', $base64_key );
-                
+
                 // Debug: Log if key creation failed
                 if ( ! $success && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
                     // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging when explicitly enabled via WP_DEBUG
@@ -1568,7 +1619,7 @@ scrape_configs:
             if ( $env_key !== false && ! empty( $env_key ) ) {
                 return base64_decode( $env_key );
             }
-            
+
             // Fallback to database storage (stored as base64 encoded)
             $key = get_option( 'slymetrics_encryption_key' );
             if ( ! $key ) {
@@ -1607,7 +1658,7 @@ scrape_configs:
             $key = self::get_encryption_key();
             $iv = openssl_random_pseudo_bytes( 16 );
             $encrypted = openssl_encrypt( $data, 'AES-256-CBC', $key, 0, $iv );
-            
+
             return base64_encode( $iv . $encrypted );
         }
 
@@ -1631,7 +1682,7 @@ scrape_configs:
             $key = self::get_encryption_key();
             $iv = substr( $data, 0, 16 );
             $encrypted = substr( $data, 16 );
-            
+
             return openssl_decrypt( $encrypted, 'AES-256-CBC', $key, 0, $iv );
         }
 
@@ -1657,7 +1708,7 @@ scrape_configs:
             if ( empty( $encrypted_value ) ) {
                 return '';
             }
-            
+
             $decrypted = self::decrypt_data( $encrypted_value );
             return $decrypted !== false ? $decrypted : '';
         }
@@ -1680,7 +1731,7 @@ scrape_configs:
                 }
                 // API Key is still stored encrypted in database even with env key
             }
-            
+
             // Fallback to database (encrypted)
             return self::get_decrypted_option( $option_name );
         }
@@ -1703,13 +1754,13 @@ scrape_configs:
         public static function add_rewrite_rules() {
             // Main metrics endpoint - handle both with and without trailing slash
             add_rewrite_rule( '^slymetrics/metrics/?$', 'index.php?slymetrics_endpoint=metrics', 'top' );
-            
+
             // Redirect slymetrics/metrics (without slash) to slymetrics/metrics/ (with slash) to avoid 301 redirects
             add_rewrite_rule( '^slymetrics/metrics$', 'index.php?slymetrics_endpoint=metrics', 'top' );
-            
+
             // Short alternative
             add_rewrite_rule( '^slymetrics/?$', 'index.php?slymetrics_endpoint=metrics', 'top' );
-            
+
             // Even shorter - handle both with and without trailing slash
             add_rewrite_rule( '^metrics/?$', 'index.php?slymetrics_endpoint=metrics', 'top' );
             add_rewrite_rule( '^metrics$', 'index.php?slymetrics_endpoint=metrics', 'top' );
@@ -1735,27 +1786,27 @@ scrape_configs:
             if ( ! is_admin() ) {
                 return;
             }
-            
+
             // Check if our rewrite rules exist
             $rules = get_option( 'rewrite_rules' );
-            
+
             // Look for our specific rule
             $has_our_rule = false;
             if ( is_array( $rules ) ) {
                 foreach ( $rules as $pattern => $rewrite ) {
-                    if ( ( strpos( $pattern, 'slymetrics/metrics' ) !== false || strpos( $pattern, '^metrics' ) !== false ) 
+                    if ( ( strpos( $pattern, 'slymetrics/metrics' ) !== false || strpos( $pattern, '^metrics' ) !== false )
                          && strpos( $rewrite, 'slymetrics_endpoint=metrics' ) !== false ) {
                         $has_our_rule = true;
                         break;
                     }
                 }
             }
-            
+
             // If our rule is missing, add it and flush
             if ( ! $has_our_rule ) {
                 self::add_rewrite_rules();
                 flush_rewrite_rules();
-                
+
                 // Also update a flag to indicate we've flushed rules
                 update_option( 'slymetrics_rewrite_rules_flushed', time() );
             }
@@ -1769,24 +1820,24 @@ scrape_configs:
         public static function ensure_plugin_initialized() {
             // Use transient to avoid database query on every request
             $check_needed = get_transient( 'slymetrics_init_check' );
-            
+
             if ( false === $check_needed ) {
                 // Check if plugin has been initialized before
                 $initialized = get_option( 'slymetrics_initialized', false );
-                
+
                 if ( ! $initialized ) {
                     // Fix encryption key if needed (migrate from old format) - BEFORE token creation
                     self::fix_encryption_key_if_needed();
-                    
+
                     // Generate default auth tokens if they don't exist - AFTER key is fixed
                     self::ensure_auth_tokens();
-                    
+
                     // Add rewrite rules
                     self::add_rewrite_rules();
-                    
+
                     // Flush immediately - this is safe because it only happens once
                     flush_rewrite_rules();
-                    
+
                     // Mark as initialized
                     update_option( 'slymetrics_initialized', true );
                     update_option( 'slymetrics_rewrite_rules_flushed', time() );
@@ -1795,7 +1846,7 @@ scrape_configs:
                     // This handles container restarts where rewrite rules might be missing
                     $rewrite_rules = get_option( 'rewrite_rules' );
                     $rules_exist = false;
-                    
+
                     if ( is_array( $rewrite_rules ) ) {
                         // Check if our custom rewrite rule exists
                         foreach ( $rewrite_rules as $pattern => $rewrite ) {
@@ -1805,7 +1856,7 @@ scrape_configs:
                             }
                         }
                     }
-                    
+
                     // If our rules don't exist, re-register and flush immediately
                     if ( ! $rules_exist ) {
                         self::add_rewrite_rules();
@@ -1813,7 +1864,7 @@ scrape_configs:
                         update_option( 'slymetrics_rewrite_rules_flushed', time() );
                     }
                 }
-                
+
                 // Set transient to skip this check for 1 hour (reduces DB queries)
                 set_transient( 'slymetrics_init_check', true, HOUR_IN_SECONDS );
             }
@@ -1829,7 +1880,7 @@ scrape_configs:
             $size = trim( $size );
             $unit = strtoupper( substr( $size, -1 ) );
             $value = (float) substr( $size, 0, -1 );
-            
+
             switch ( $unit ) {
                 case 'G':
                     return $value * 1024 * 1024 * 1024;
@@ -1849,7 +1900,7 @@ scrape_configs:
          */
         private static function get_directory_sizes() {
             $sizes = array();
-            
+
             try {
                 // WordPress uploads directory
                 $upload_dir = wp_upload_dir();
@@ -1857,29 +1908,29 @@ scrape_configs:
                     $uploads_size = self::get_directory_size_safe( $upload_dir['basedir'] );
                     $sizes['uploads'] = round( $uploads_size / (1024 * 1024), 2 );
                 }
-                
+
                 // Themes directory
                 $themes_dir = get_theme_root();
                 if ( is_dir( $themes_dir ) ) {
                     $themes_size = self::get_directory_size_safe( $themes_dir );
                     $sizes['themes'] = round( $themes_size / (1024 * 1024), 2 );
                 }
-                
+
                 // Plugins directory using WordPress API
                 $plugins_dir = defined( 'WP_PLUGIN_DIR' ) ? WP_PLUGIN_DIR : SLYMET_PLUGIN_DIR . '../..';
                 if ( is_dir( $plugins_dir ) ) {
                     $plugins_size = self::get_directory_size_safe( $plugins_dir );
                     $sizes['plugins'] = round( $plugins_size / (1024 * 1024), 2 );
                 }
-                
+
                 // Calculate total
                 $total_size = array_sum( $sizes );
                 $sizes['total'] = round( $total_size, 2 );
-                
+
             } catch ( Exception $e ) {
                 // Return empty array on error
             }
-            
+
             return $sizes;
         }
 
@@ -1893,21 +1944,21 @@ scrape_configs:
             if ( ! is_dir( $directory ) || ! is_readable( $directory ) ) {
                 return 0;
             }
-            
+
             $size = 0;
-            
+
             try {
                 $iterator = new RecursiveIteratorIterator(
                     new RecursiveDirectoryIterator( $directory, RecursiveDirectoryIterator::SKIP_DOTS ),
                     RecursiveIteratorIterator::LEAVES_ONLY
                 );
-                
+
                 foreach ( $iterator as $file ) {
                     if ( $file->isFile() && $file->isReadable() ) {
                         $size += $file->getSize();
                     }
                 }
-                
+
             } catch ( Exception $e ) {
                 // Fallback: manual directory traversal
                 $files = glob( rtrim( $directory, '/' ) . '/*', GLOB_MARK );
@@ -1921,7 +1972,7 @@ scrape_configs:
                     }
                 }
             }
-            
+
             return $size;
         }
 
@@ -1934,12 +1985,12 @@ scrape_configs:
             try {
                 // Use enhanced health checks directly for more reliable results
                 return self::get_enhanced_health_checks();
-                
+
             } catch ( Exception $e ) {
                 return array();
             }
         }
-        
+
         /**
          * Get WordPress health tests using the actual WordPress Site Health system.
          * This function properly loads and immediately uses the WP Site Health class.
@@ -1957,17 +2008,17 @@ scrape_configs:
                         return array();
                     }
                 }
-                
+
                 // Ensure class is available after loading
                 if ( ! class_exists( 'WP_Site_Health' ) ) {
                     return array();
                 }
-                
+
                 $site_health = new WP_Site_Health();
-                
+
                 // Get both direct and async tests
                 $tests = array();
-                
+
                 // Direct tests
                 if ( method_exists( $site_health, 'get_tests' ) ) {
                     $all_tests = $site_health->get_tests();
@@ -1986,7 +2037,7 @@ scrape_configs:
                         }
                     }
                 }
-                
+
                 // Count results by category
                 $results = array(
                     'good' => 0,
@@ -1996,7 +2047,7 @@ scrape_configs:
                     'performance' => 0,
                     'total_failed' => 0
                 );
-                
+
                 foreach ( $tests as $test ) {
                     if ( isset( $test['status'] ) ) {
                         switch ( $test['status'] ) {
@@ -2012,12 +2063,12 @@ scrape_configs:
                                 $results['total_failed']++;
                                 break;
                         }
-                        
+
                         // Categorize by test type
                         if ( isset( $test['test'] ) && is_string( $test['test'] ) ) {
                             $test_name = strtolower( $test['test'] );
-                            if ( strpos( $test_name, 'security' ) !== false || 
-                                 strpos( $test_name, 'debug' ) !== false || 
+                            if ( strpos( $test_name, 'security' ) !== false ||
+                                 strpos( $test_name, 'debug' ) !== false ||
                                  strpos( $test_name, 'file_editing' ) !== false ||
                                  strpos( $test_name, 'https' ) !== false ) {
                                 $results['security']++;
@@ -2029,14 +2080,14 @@ scrape_configs:
                         }
                     }
                 }
-                
+
                 return $results;
-                
+
             } catch ( Exception $e ) {
                 return array();
             }
         }
-        
+
         /**
          * Enhanced health checks with more comprehensive WordPress-style checks.
          * This function counts based on the same logic as get_enhanced_health_check_details().
@@ -2046,7 +2097,7 @@ scrape_configs:
         private static function get_enhanced_health_checks() {
             // Get detailed checks and count them
             $details = self::get_enhanced_health_check_details();
-            
+
             $results = array(
                 'good' => 0,
                 'recommended' => 0,
@@ -2055,7 +2106,7 @@ scrape_configs:
                 'performance' => 0,
                 'total_failed' => 0
             );
-            
+
             foreach ( $details as $detail ) {
                 switch ( $detail['status'] ) {
                     case 'good':
@@ -2068,7 +2119,7 @@ scrape_configs:
                         $results['critical']++;
                         break;
                 }
-                
+
                 // Count failed tests by category (not all tests, just failed ones)
                 if ( $detail['category'] === 'security' && in_array( $detail['status'], array( 'recommended', 'critical' ), true ) ) {
                     $results['security']++;
@@ -2076,10 +2127,10 @@ scrape_configs:
                     $results['performance']++;
                 }
             }
-            
+
             // Total failed is critical + recommended
             $results['total_failed'] = $results['critical'] + $results['recommended'];
-            
+
             return $results;
         }
 
@@ -2095,15 +2146,15 @@ scrape_configs:
                     // Get enhanced details which includes both WP and custom checks
                     return self::get_enhanced_health_check_details();
                 }
-                
+
                 // Fallback to enhanced health checks
                 return self::get_enhanced_health_check_details();
-                
+
             } catch ( Exception $e ) {
                 return array();
             }
         }
-        
+
         /**
          * Enhanced health check details with specific test information.
          *
@@ -2111,7 +2162,7 @@ scrape_configs:
          */
         private static function get_enhanced_health_check_details() {
             $details = array();
-            
+
             try {
                 // File editing check
                 if ( ! defined( 'DISALLOW_FILE_EDIT' ) || ! DISALLOW_FILE_EDIT ) {
@@ -2129,7 +2180,7 @@ scrape_configs:
                         'description' => 'File editing is properly disabled'
                     );
                 }
-                
+
                 // Debug mode check
                 if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
                     $details[] = array(
@@ -2146,11 +2197,11 @@ scrape_configs:
                         'description' => 'Debug mode is properly disabled'
                     );
                 }
-                
+
                 // Plugin updates check
                 $updates = get_site_transient( 'update_plugins' );
                 $updates_available = isset( $updates->response ) && is_array( $updates->response ) ? count( $updates->response ) : 0;
-                
+
                 if ( $updates_available > 0 ) {
                     $details[] = array(
                         'test' => 'plugin_updates',
@@ -2166,7 +2217,7 @@ scrape_configs:
                         'description' => 'All plugins are up to date'
                     );
                 }
-                
+
                 // PHP version check
                 if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
                     $details[] = array(
@@ -2190,11 +2241,11 @@ scrape_configs:
                         'description' => 'PHP version ' . PHP_VERSION . ' is current'
                     );
                 }
-                
+
                 // Memory limit check
                 $memory_limit = ini_get( 'memory_limit' );
                 $memory_bytes = self::convert_to_bytes( $memory_limit );
-                
+
                 if ( $memory_bytes < 128 * 1024 * 1024 ) { // Less than 128MB
                     $details[] = array(
                         'test' => 'php_memory_limit',
@@ -2217,7 +2268,7 @@ scrape_configs:
                         'description' => 'Memory limit ' . $memory_limit . ' is adequate'
                     );
                 }
-                
+
                 // Database connection check
                 global $wpdb;
                 if ( $wpdb->last_error ) {
@@ -2235,7 +2286,7 @@ scrape_configs:
                         'description' => 'Database connection is working properly'
                     );
                 }
-                
+
                 // HTTPS check
                 if ( is_ssl() ) {
                     $details[] = array(
@@ -2252,11 +2303,11 @@ scrape_configs:
                         'description' => 'Site should use HTTPS for better security'
                     );
                 }
-                
+
             } catch ( Exception $e ) {
                 // Return what we have so far
             }
-            
+
             return $details;
         }
     }
