@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name: SlyMetrics - Metrics Exporter for Prometheus
- * Plugin URI: https://github.com/slydlake/slymetrics
+ * Plugin URI: https://github.com/slybase/wordpress-slymetrics
  * Description: Export comprehensive WordPress metrics in Prometheus format for monitoring and observability.
- * Version: 1.4.0
+ * Version: 1.4.1
  * Requires at least: 5.0
  * Requires PHP: 7.4
  * Author: Timon Först
- * Author URI: https://github.com/slydlake
+ * Author URI: https://github.com/slybase
  * License: MIT
  * License URI: https://opensource.org/licenses/MIT
  * Text Domain: slymetrics
@@ -1426,7 +1426,7 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                         ?></li>
                     </ul>
 
-                    <p>📖 <strong><?php esc_html_e( 'More Examples:', 'slymetrics' ); ?></strong> <a href="https://github.com/slydlake/wordpress-prometheus-metrics#security-features" target="_blank"><?php esc_html_e( 'See GitHub Documentation', 'slymetrics' ); ?></a></p>
+                    <p>📖 <strong><?php esc_html_e( 'More Examples:', 'slymetrics' ); ?></strong> <a href="https://github.com/slybase/wordpress-slymetrics#security-features" target="_blank"><?php esc_html_e( 'See GitHub Documentation', 'slymetrics' ); ?></a></p>
                 </div>
 
                 <div class="slymetrics-card">

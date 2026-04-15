@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: SlyMetrics - Metrics Exporter for Prometheus 1.3.9\n"
-"Report-Msgid-Bugs-To: https://github.com/slydlake/slymetrics/issues\n"
+"Report-Msgid-Bugs-To: https://github.com/slybase/wordpress-slymetrics/issues\n"
 "POT-Creation-Date: 2026-04-14 00:00+0200\n"
 "PO-Revision-Date: 2026-04-14 00:00+0200\n"
 "Last-Translator: GitHub Copilot <copilot@github.com>\n"

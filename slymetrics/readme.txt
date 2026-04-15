@@ -81,7 +81,7 @@ The SlyMetrics WordPress plugin is a powerful monitoring plugin that exports com
 4. Copy your Bearer Token or API Key for use in your Prometheus configuration
 5. Configure your Prometheus server to scrape the metrics endpoint
 
-For detailed information take a look on the Github Page https://github.com/slydlake/slymetrics
+For detailed information take a look on the Github Page https://github.com/slybase/wordpress-slymetrics
 
 **Prometheus Configuration Example:**
 
@@ -144,6 +144,9 @@ Yes! All metrics include site labels, making it perfect for monitoring multi-sit
 6. Grafana dashboard selectable Websites
 
 == Changelog ==
+
+= 1.4.1 =
+* **📝 Moved GitHub repositry to slybase organization
 
 = 1.4.0 =
 * **✅ WordPress 7.0 Compatibility**: Verified compatibility with WordPress 7.0
@@ -285,7 +288,7 @@ Initial release of Prometheus Metrics Wordpress Plugin. Install to start monitor
 
 == Additional Information ==
 
-**GitHub Repository:** https://github.com/slydlake/slymetrics
+**GitHub Repository:** https://github.com/slybase/wordpress-slymetrics
 
 **Grafana Dashboard:** Included in the plugin package for comprehensive WordPress monitoring.
 
