@@ -1,6 +1,6 @@
-# SlyMetrics - WordPress Prometheus Plugin
+# SlyMetrics - WordPress Prometheus and MCP metrics provider
 
-A comprehensive WordPress plugin that exports WordPress metrics in Prometheus format for monitoring including Grafana Dashboard for multi sites.
+A comprehensive WordPress plugin that exports WordPress metrics in Prometheus and MCP format for monitoring including Grafana Dashboard for multi sites.
 
 Wordpress Plugin page: [https://wordpress.org/plugins/slymetrics](https://wordpress.org/plugins/slymetrics/)
 
