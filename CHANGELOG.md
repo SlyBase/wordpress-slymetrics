@@ -5,6 +5,9 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [1.4.2]
+### Changes
+- Refactored monolithic plugin class into focused namespaced classes under `src/` (Util, Auth, Endpoint, Metrics, Health, Admin) for improved maintainability; all existing public interfaces and tests remain unchanged.
+
 ### Fixes
 - Database names containing hyphens (e.g. `slybase-com`) are now accepted; the character allowlist was too strict and blocked valid MySQL database names.
 - Security check for invalid characters in request paths is now scoped to metrics endpoints only; previously it logged errors for every WordPress request (CSS, images, etc.).

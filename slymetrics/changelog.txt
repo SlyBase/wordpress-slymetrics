@@ -1,4 +1,8 @@
 = 1.4.2 =
+Changes:
+* Refactored monolithic plugin class into focused namespaced classes under src/ for improved maintainability; all existing public interfaces and tests remain unchanged.
+
+Fixes:
 * Database names containing hyphens (e.g. slybase-com) are now accepted; the character allowlist was too strict and blocked valid MySQL database names.
 * Security check for invalid characters in request paths is now scoped to metrics endpoints only; previously it logged errors for every WordPress request (CSS, images, etc.).
 * Internal and private IP addresses (e.g. Prometheus scrapers running in the same network or Kubernetes cluster) are now correctly identified; previously they all shared one rate-limit bucket under unknown.
