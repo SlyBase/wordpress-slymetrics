@@ -254,6 +254,11 @@ if ( ! function_exists( 'sanitize_text_field' ) ) {
         return trim( $str );
     }
 }
+if ( ! function_exists( 'sanitize_key' ) ) {
+    function sanitize_key( string $key ): string {
+        return preg_replace( '/[^a-z0-9_-]/', '', strtolower( $key ) );
+    }
+}
 if ( ! function_exists( 'wp_unslash' ) ) {
     function wp_unslash( mixed $value ): mixed {
         return is_string( $value ) ? stripslashes( $value ) : $value;
@@ -267,6 +272,11 @@ if ( ! function_exists( 'wp_json_encode' ) ) {
 if ( ! function_exists( 'wp_installing' ) ) {
     function wp_installing( ?bool $is_installing = null ): bool {
         return false;
+    }
+}
+if ( ! function_exists( 'wp_register_ability' ) ) {
+    function wp_register_ability( string $name, array $args ): bool {
+        return true;
     }
 }
 if ( ! function_exists( 'admin_url' ) ) {

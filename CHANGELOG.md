@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.5.0]
+### Features
+- Expose WordPress metrics via the WordPress MCP Adapter (WP 6.9+): five abilities accessible as MCP tools for AI agents — `metrics/get-summary`, `metrics/get-users`, `metrics/get-posts`, `metrics/get-plugins`, and `metrics/get-site-health`.
+- Add dedicated `slymetrics-mcp-server` custom MCP server registered via `mcp_adapter_init` hook when the MCP Adapter plugin is active.
+- Add PHPUnit job to the CI pipeline covering PHP 8.1, 8.2, and 8.3.
+
 ## [1.4.2]
 ### Changes
 - Refactored monolithic plugin class into focused namespaced classes under `src/` (Util, Auth, Endpoint, Metrics, Health, Admin) for improved maintainability; all existing public interfaces and tests remain unchanged.

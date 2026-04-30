@@ -8,6 +8,7 @@ use SlyMetrics\Admin\Controller;
 use SlyMetrics\Auth\TokenManager;
 use SlyMetrics\Endpoint\RestHandler;
 use SlyMetrics\Endpoint\Router;
+use SlyMetrics\MCP\AbilityRegistrar;
 use SlyMetrics\Metrics\Cache;
 
 /**
@@ -25,6 +26,9 @@ class Plugin {
         // REST API
         add_action( 'rest_api_init', array( RestHandler::class, 'register_routes' ) );
         add_filter( 'rest_pre_serve_request', array( RestHandler::class, 'pre_serve' ), 10, 4 );
+
+        // MCP Abilities (WordPress 6.9+)
+        AbilityRegistrar::init();
 
         // Lifecycle
         register_activation_hook( SLYMET_PLUGIN_FILE, array( self::class, 'on_activate' ) );

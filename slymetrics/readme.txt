@@ -3,7 +3,7 @@ Contributors: timonf
 Tags: prometheus, metrics, monitoring, observability, performance
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.4.2
+Stable tag: 1.5.0
 Requires PHP: 7.4
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -20,6 +20,7 @@ The SlyMetrics WordPress plugin is a powerful monitoring plugin that exports com
 * **Secure Authentication** - Multiple authentication methods with encrypted token storage and rate limiting
 * **Comprehensive Metrics** - WordPress users, posts, pages, plugins, themes, comments, categories, tags, and media
 * **Advanced Monitoring** - WordPress version tracking, autoload performance, PHP configuration, database size
+* **MCP Integration** - Expose metrics via the WordPress MCP Adapter as AI agent tools (WP 6.9+): metrics/get-summary, metrics/get-users, metrics/get-posts, metrics/get-plugins, metrics/get-site-health
 * **Site Health Integration** - WordPress Site Health API integration for security and performance monitoring
 * **Directory Size Monitoring** - Track uploads, themes, and plugins directory sizes with intelligent caching
 * **REST API Integration** - Uses native WordPress REST API with enhanced security
@@ -142,3 +143,15 @@ Yes! All metrics include site labels, making it perfect for monitoring multi-sit
 4. Grafana dashboard displaying WordPress metrics and health status
 5. Grafana dashboard displaying WordPress metrics and health status
 6. Grafana dashboard selectable Websites
+
+== Changelog ==
+
+= 1.5.0 =
+Features:
+* Expose WordPress metrics via the WordPress MCP Adapter (WP 6.9+): five abilities accessible as MCP tools for AI agents: metrics/get-summary, metrics/get-users, metrics/get-posts, metrics/get-plugins, and metrics/get-site-health.
+* Add dedicated slymetrics-mcp-server custom MCP server registered when the MCP Adapter plugin is active.
+
+== Upgrade Notice ==
+
+= 1.5.0 =
+Adds MCP Adapter integration (WordPress 6.9+). No breaking changes; update is safe for all installations.

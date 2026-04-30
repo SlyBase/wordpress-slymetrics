@@ -138,6 +138,33 @@ jobs:
             php -l "$file"
           done < <(find slymetrics -name '*.php' -print0 | sort -z)
 
+  phpunit:
+    name: PHPUnit Tests (PHP ${{ matrix.php-version }})
+    runs-on: ubuntu-latest
+    needs:
+      - lint-php
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: [ "8.1", "8.2", "8.3" ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Run PHPUnit tests
+        run: composer test
+
   build-plugin:
     name: Build Plugin Archive
     runs-on: ubuntu-latest
@@ -145,6 +172,7 @@ jobs:
       - lint-workflows
       - validate-metadata
       - lint-php
+      - phpunit
 
     steps:
       - name: Checkout repository
