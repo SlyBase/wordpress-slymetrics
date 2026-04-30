@@ -108,7 +108,7 @@ class AbilityRegistrar {
             self::REST_ROUTE,
             'SlyMetrics MCP Server',
             'Exposes WordPress site metrics as MCP tools for AI agents. Provides user counts, post/page counts, plugin status, and site health diagnostics.',
-            'v1.6.0',
+            'v1.5.0',
             array( \WP\MCP\Transport\HttpTransport::class ),
             \WP\MCP\Infrastructure\ErrorHandling\ErrorLogMcpErrorHandler::class,
             \WP\MCP\Infrastructure\Observability\NullMcpObservabilityHandler::class,

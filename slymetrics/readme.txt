@@ -3,7 +3,7 @@ Contributors: timonf
 Tags: prometheus, metrics, monitoring, observability, performance
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.6.0
+Stable tag: 1.5.0
 Requires PHP: 7.4
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -146,19 +146,13 @@ Yes! All metrics include site labels, making it perfect for monitoring multi-sit
 
 == Changelog ==
 
-= 1.6.0 =
-Features:
-* Add three new MCP abilities exposing all remaining Prometheus metrics as AI agent tools: metrics/get-content (comments, categories, media, tags), metrics/get-storage (autoload options, database size, directory sizes), and metrics/get-health-checks (site health check summary and individual test results).
-
 = 1.5.0 =
 Features:
 * Expose WordPress metrics via the WordPress MCP Adapter (WP 6.9+): five abilities accessible as MCP tools for AI agents: metrics/get-summary, metrics/get-users, metrics/get-posts, metrics/get-plugins, and metrics/get-site-health.
 * Add dedicated slymetrics-mcp-server custom MCP server registered when the MCP Adapter plugin is active.
+* Add three new MCP abilities exposing all remaining Prometheus metrics: metrics/get-content (comments, categories, media, tags), metrics/get-storage (autoload options, database size, directory sizes), and metrics/get-health-checks (site health check summary and individual test results).
 
 == Upgrade Notice ==
 
-= 1.6.0 =
-Adds three new MCP abilities (metrics/get-content, metrics/get-storage, metrics/get-health-checks). No breaking changes; update is safe for all installations.
-
 = 1.5.0 =
-Adds MCP Adapter integration (WordPress 6.9+). No breaking changes; update is safe for all installations.
+Adds MCP Adapter integration (WordPress 6.9+) with eight AI agent tools covering all Prometheus metrics. No breaking changes; update is safe for all installations.
