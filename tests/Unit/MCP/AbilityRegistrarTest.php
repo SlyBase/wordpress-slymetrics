@@ -36,7 +36,7 @@ class AbilityRegistrarTest extends TestCase_Base {
     }
 
     public function test_register_abilities_does_not_throw(): void {
-        // Calls definition() on all 5 abilities and wp_register_ability (stubbed in bootstrap)
+        // Calls definition() on all 8 abilities and wp_register_ability (stubbed in bootstrap)
         AbilityRegistrar::register_abilities();
         $this->assertTrue( true );
     }
@@ -47,19 +47,22 @@ class AbilityRegistrarTest extends TestCase_Base {
         $this->assertTrue( true );
     }
 
-    public function test_register_abilities_covers_all_five_metric_types(): void {
+    public function test_register_abilities_covers_all_eight_metric_types(): void {
         $ability_names = array(
             'metrics/get-summary',
             'metrics/get-users',
             'metrics/get-posts',
             'metrics/get-plugins',
             'metrics/get-site-health',
+            'metrics/get-content',
+            'metrics/get-storage',
+            'metrics/get-health-checks',
         );
 
         foreach ( $ability_names as $name ) {
             $this->assertStringStartsWith( 'metrics/', $name );
         }
 
-        $this->assertCount( 5, $ability_names );
+        $this->assertCount( 8, $ability_names );
     }
 }

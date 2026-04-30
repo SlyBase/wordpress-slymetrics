@@ -4,9 +4,12 @@ namespace SlyMetrics\MCP;
 
 defined( 'ABSPATH' ) || exit;
 
+use SlyMetrics\MCP\Ability\GetContentAbility;
+use SlyMetrics\MCP\Ability\GetHealthChecksAbility;
 use SlyMetrics\MCP\Ability\GetPluginsAbility;
 use SlyMetrics\MCP\Ability\GetPostsAbility;
 use SlyMetrics\MCP\Ability\GetSiteHealthAbility;
+use SlyMetrics\MCP\Ability\GetStorageAbility;
 use SlyMetrics\MCP\Ability\GetSummaryAbility;
 use SlyMetrics\MCP\Ability\GetUsersAbility;
 
@@ -26,6 +29,9 @@ use SlyMetrics\MCP\Ability\GetUsersAbility;
  *   metrics/get-posts        – post counts by status (param: post_type)
  *   metrics/get-plugins      – plugin + theme counts (no params)
  *   metrics/get-site-health  – WP/PHP/DB diagnostics (no params)
+ *   metrics/get-content      – comments, categories, media, tags (no params)
+ *   metrics/get-storage      – autoload, database size, directory sizes (no params)
+ *   metrics/get-health-checks – site health check summary + details (no params)
  *
  * All abilities require the manage_options capability.
  *
@@ -71,6 +77,9 @@ class AbilityRegistrar {
             GetPostsAbility::definition(),
             GetPluginsAbility::definition(),
             GetSiteHealthAbility::definition(),
+            GetContentAbility::definition(),
+            GetStorageAbility::definition(),
+            GetHealthChecksAbility::definition(),
         );
 
         foreach ( $definitions as $definition ) {
@@ -99,7 +108,7 @@ class AbilityRegistrar {
             self::REST_ROUTE,
             'SlyMetrics MCP Server',
             'Exposes WordPress site metrics as MCP tools for AI agents. Provides user counts, post/page counts, plugin status, and site health diagnostics.',
-            'v1.5.0',
+            'v1.6.0',
             array( \WP\MCP\Transport\HttpTransport::class ),
             \WP\MCP\Infrastructure\ErrorHandling\ErrorLogMcpErrorHandler::class,
             \WP\MCP\Infrastructure\Observability\NullMcpObservabilityHandler::class,
@@ -109,6 +118,9 @@ class AbilityRegistrar {
                 'metrics/get-posts',
                 'metrics/get-plugins',
                 'metrics/get-site-health',
+                'metrics/get-content',
+                'metrics/get-storage',
+                'metrics/get-health-checks',
             )
         );
     }

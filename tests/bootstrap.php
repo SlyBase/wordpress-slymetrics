@@ -279,6 +279,11 @@ if ( ! function_exists( 'wp_register_ability' ) ) {
         return true;
     }
 }
+if ( ! function_exists( 'is_ssl' ) ) {
+    function is_ssl(): bool {
+        return false;
+    }
+}
 if ( ! function_exists( 'admin_url' ) ) {
     function admin_url( string $path = '', string $scheme = 'admin' ): string {
         return 'https://example.com/wp-admin/' . ltrim( $path, '/' );

@@ -11,7 +11,7 @@ Wordpress Plugin page: [https://wordpress.org/plugins/slymetrics](https://wordpr
 - **📊 Comprehensive Metrics**: WordPress content, users, plugins, themes, and system information
 - **🔒 Enterprise Security**: Advanced authentication with rate limiting, input validation, and XSS protection
 - **🌐 Multiple Endpoints**: Clean URLs (`/slymetrics/metrics`), REST API, and query parameter fallbacks
-- **🤖 MCP Integration**: Expose metrics via WordPress MCP Adapter as AI-accessible tools (`metrics/get-summary`, `metrics/get-users`, `metrics/get-posts`, `metrics/get-plugins`, `metrics/get-site-health`)
+- **🤖 MCP Integration**: Expose metrics via WordPress MCP Adapter as AI-accessible tools (`metrics/get-summary`, `metrics/get-users`, `metrics/get-posts`, `metrics/get-plugins`, `metrics/get-site-health`, `metrics/get-content`, `metrics/get-storage`, `metrics/get-health-checks`)
 - **🏥 Health Monitoring**: Integration with WordPress Site Health API for detailed system checks
 - **📈 Grafana Optimized**: Display-friendly metrics specifically designed for clean table visualizations
 - **🐳 Container Ready**: Environment variable support for Docker, Kubernetes, and CI/CD pipelines

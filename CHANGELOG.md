@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.6.0]
+### Features
+- Add three new MCP abilities exposing all remaining Prometheus metrics as AI agent tools: `metrics/get-content` (comments, categories, media, tags), `metrics/get-storage` (autoload options, database size, directory sizes), and `metrics/get-health-checks` (site health check summary and individual test results).
+
 ## [1.5.0]
 ### Features
 - Expose WordPress metrics via the WordPress MCP Adapter (WP 6.9+): five abilities accessible as MCP tools for AI agents — `metrics/get-summary`, `metrics/get-users`, `metrics/get-posts`, `metrics/get-plugins`, and `metrics/get-site-health`.
