@@ -7,7 +7,8 @@
  * Requires at least: 5.0
  * Requires PHP: 7.4
  * Author: Timon Först
- * Author URI: https://github.com/slybase
+ * Author URI: https://slybase.com
+ * Update URI: https://github.com/slybase/wordpress-slymetrics
  * License: MIT
  * License URI: https://opensource.org/licenses/MIT
  * Text Domain: slymetrics
