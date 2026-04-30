@@ -30,7 +30,7 @@ class GetStorageAbility {
             'label'               => 'Storage Metrics',
             'category'            => 'site',
             'description'         => 'Returns WordPress storage data: autoloaded options count, size in bytes and transient count; database size in bytes; and directory sizes in bytes for uploads, themes, plugins, and total. No parameters required.',
-            'input_schema'        => array( 'type' => 'object', 'properties' => (object) array(), 'required' => array() ),
+            'input_schema'        => array( 'type' => array( 'object', 'null' ), 'properties' => (object) array(), 'required' => array() ),
             'output_schema'       => array(
                 'type'       => 'object',
                 'properties' => array(

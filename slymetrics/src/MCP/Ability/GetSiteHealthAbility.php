@@ -28,7 +28,7 @@ class GetSiteHealthAbility {
             'label'              => 'Site Health Metrics',
             'category'           => 'site',
             'description'        => 'Returns WordPress runtime diagnostics: WP version, update availability, PHP version, database version, WP_DEBUG status, and key PHP ini limits (memory_limit, max_execution_time, upload_max_filesize). No parameters required.',
-            'input_schema'       => array( 'type' => 'object', 'properties' => (object) array(), 'required' => array() ),
+            'input_schema'       => array( 'type' => array( 'object', 'null' ), 'properties' => (object) array(), 'required' => array() ),
             'output_schema'      => array(
                 'type'       => 'object',
                 'properties' => array(

@@ -28,7 +28,7 @@ class GetSummaryAbility {
             'label'              => 'Metrics Summary',
             'category'           => 'site',
             'description'        => 'Returns a complete WordPress metrics snapshot: users by role, post/page counts by status, plugin counts (active/inactive/total), WordPress version, PHP version. No parameters required.',
-            'input_schema'       => array( 'type' => 'object', 'properties' => (object) array(), 'required' => array() ),
+            'input_schema'       => array( 'type' => array( 'object', 'null' ), 'properties' => (object) array(), 'required' => array() ),
             'output_schema'      => array(
                 'type'       => 'object',
                 'properties' => array(
