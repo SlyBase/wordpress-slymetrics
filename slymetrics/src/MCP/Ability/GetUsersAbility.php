@@ -26,7 +26,7 @@ class GetUsersAbility {
             'label'              => 'User Metrics',
             'category'           => 'user',
             'description'        => 'Returns WordPress user counts by role and the total count. No parameters required.',
-            'input_schema'       => array( 'type' => 'object', 'properties' => array(), 'required' => array() ),
+            'input_schema'       => array( 'type' => 'object', 'properties' => (object) array(), 'required' => array() ),
             'output_schema'      => array(
                 'type'       => 'object',
                 'properties' => array(

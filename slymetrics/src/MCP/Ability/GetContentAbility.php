@@ -27,7 +27,7 @@ class GetContentAbility {
             'label'               => 'Content Metrics',
             'category'            => 'site',
             'description'         => 'Returns WordPress content counts: comments by status (approved, spam, trash, moderated, total), total categories, total media attachments, and total tags. No parameters required.',
-            'input_schema'        => array( 'type' => 'object', 'properties' => array(), 'required' => array() ),
+            'input_schema'        => array( 'type' => 'object', 'properties' => (object) array(), 'required' => array() ),
             'output_schema'       => array(
                 'type'       => 'object',
                 'properties' => array(

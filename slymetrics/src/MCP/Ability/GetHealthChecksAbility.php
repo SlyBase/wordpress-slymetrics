@@ -30,7 +30,7 @@ class GetHealthChecksAbility {
             'label'               => 'Health Check Results',
             'category'            => 'site',
             'description'         => 'Returns WordPress site health check results: a summary with counts by status (good, recommended, critical) and category (security, performance), plus individual test results each with test name, status, category, and description. No parameters required.',
-            'input_schema'        => array( 'type' => 'object', 'properties' => array(), 'required' => array() ),
+            'input_schema'        => array( 'type' => 'object', 'properties' => (object) array(), 'required' => array() ),
             'output_schema'       => array(
                 'type'       => 'object',
                 'properties' => array(

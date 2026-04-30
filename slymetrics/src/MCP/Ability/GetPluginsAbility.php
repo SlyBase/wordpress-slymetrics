@@ -27,7 +27,7 @@ class GetPluginsAbility {
             'label'              => 'Plugin Metrics',
             'category'           => 'site',
             'description'        => 'Returns plugin counts (active, inactive, total), how many plugins have updates available, and the number of installed themes. No parameters required.',
-            'input_schema'       => array( 'type' => 'object', 'properties' => array(), 'required' => array() ),
+            'input_schema'       => array( 'type' => 'object', 'properties' => (object) array(), 'required' => array() ),
             'output_schema'      => array(
                 'type'       => 'object',
                 'properties' => array(
