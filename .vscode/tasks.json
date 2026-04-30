@@ -1,0 +1,182 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "WP Plugin: Build Plugin ZIP",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source .github/scripts/plugin-config.sh && bash .github/scripts/build-plugin-zip.sh \"${workspaceFolder}/${plugin_slug}.zip\""
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "close": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "WP Plugin: Verify Plugin ZIP",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source .github/scripts/plugin-config.sh && bash .github/scripts/verify-plugin-zip.sh \"${workspaceFolder}/${plugin_slug}.zip\""
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "close": true,
+                "showReuseMessage": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "WP Plugin: Build and Verify Plugin ZIP",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "WP Plugin: Build Plugin ZIP",
+                "WP Plugin: Verify Plugin ZIP"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "WP Plugin: Sync changelog.txt from CHANGELOG.md",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                ".github/scripts/sync-changelog-txt.sh"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "close": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "WP Plugin: Generate Language Files",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                ".github/scripts/generate-language-files.sh"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "close": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "WP Plugin: Prepare Release Files",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "WP Plugin: Generate Language Files",
+                "WP Plugin: Sync changelog.txt from CHANGELOG.md"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "WP Plugin: Deploy Plugin ZIP to WordPress Pod",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source .github/scripts/plugin-config.sh && bash .github/scripts/deploy-plugin-to-wordpress-pod.sh \"${workspaceFolder}/${plugin_slug}.zip\""
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "DEPLOY_NAMESPACE": "default",
+                    "DEPLOY_POD_SELECTOR": "app.kubernetes.io/instance=wp-loco,app.kubernetes.io/name=wordpress",
+                    "DEPLOY_CONTAINER": "wordpress",
+                    "KUBECTL_BIN": "/opt/homebrew/bin/kubectl"
+                }
+            },
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "WP Plugin: Verify Plugin ZIP"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "close": true,
+                "showReuseMessage": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "WP Plugin: Build and Deploy Plugin ZIP",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "WP Plugin: Build Plugin ZIP",
+                "WP Plugin: Deploy Plugin ZIP to WordPress Pod"
+            ],
+            "presentation": {
+                "close": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "WP Plugin: Deploy Plugin ZIP to SlyBase WordPress Pod",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source .github/scripts/plugin-config.sh && bash .github/scripts/deploy-plugin-to-wordpress-pod.sh \"${workspaceFolder}/${plugin_slug}.zip\""
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "DEPLOY_NAMESPACE": "websites",
+                    "DEPLOY_POD_SELECTOR": "app.kubernetes.io/instance=slybase-com,app.kubernetes.io/name=wordpress",
+                    "DEPLOY_CONTAINER": "wordpress",
+                    "KUBECTL_BIN": "/opt/homebrew/bin/kubectl"
+                }
+            },
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "WP Plugin: Verify Plugin ZIP"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "close": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "WP Plugin: Build and Deploy Plugin ZIP to SlyBase WordPress Pod",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "WP Plugin: Build Plugin ZIP",
+                "WP Plugin: Deploy Plugin ZIP to SlyBase WordPress Pod"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

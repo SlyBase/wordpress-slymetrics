@@ -6,7 +6,9 @@ output_zip="${1:?Usage: build-plugin-zip.sh <output-zip>}"
 caller_cwd="$(pwd)"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "$script_dir/../.." && pwd)"
-plugin_dir="$repo_root/slymetrics"
+# shellcheck source=plugin-config.sh
+source "$script_dir/plugin-config.sh"
+plugin_dir="$repo_root/$plugin_slug"
 staging_root="$(mktemp -d)"
 trap 'rm -rf "$staging_root"' EXIT
 
@@ -22,11 +24,11 @@ rm -f "$output_zip_path"
 rsync -a \
 	--exclude='.DS_Store' \
 	--exclude='.gitignore' \
-	"$plugin_dir/" "$staging_root/slymetrics/"
+	"$plugin_dir/" "$staging_root/$plugin_slug/"
 
 (
 	cd "$staging_root"
-	zip -rq "$output_zip_path" slymetrics
+	zip -rq "$output_zip_path" "$plugin_slug"
 )
 
 echo "Created plugin archive: $output_zip_path"

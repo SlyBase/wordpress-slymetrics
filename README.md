@@ -21,75 +21,6 @@ Wordpress Plugin page: [https://wordpress.org/plugins/slymetrics](https://wordpr
 - **💾 Memory Optimized**: Lazy loading and optimized data structures for heavy operations
 - **🌐 Professional Code**: Multi-language support with enterprise-grade documentation
 
-### New in Version 1.3.7
-- **🌍 UTF-8 Character Support**: Fixed label encoding to properly support umlauts and special characters (e.g., ö, ä, ü, é, etc.)
-
-### New in Version 1.3.6
-- **🚀 Headless WordPress Support**: Plugin now auto-initializes without requiring admin panel access
-- **🐳 Container-Friendly**: Perfect for Docker/Kubernetes deployments where wp-admin is never accessed
-- **⚡ Smart Initialization**: Automatic encryption key generation and token creation on first metrics request
-- **🔧 Performance Optimization**: Transient-based initialization check to avoid unnecessary database queries
-- **🛠️ Multi-Replica Ready**: Ensures consistent plugin behavior across all WordPress pods in scaled deployments
-- **📦 CI/CD Compatible**: Works seamlessly with fully automated WordPress deployments
-- **🏷️ HTML Entity Decoding**: Fixed Prometheus label values to properly decode HTML entities (e.g., &#039; → ')
-
-### New in Version 1.3.5
-- **📊 Prometheus Configuration**: Added scheme parameter to Prometheus sample scraper configuration
-
-### New in Version 1.3.4 
-- **🎨 New Plugin Icon**: Added custom plugin icon
-
-### New in Version 1.3.3
-- **🔧 Prometheus ServiceMonitor Fix**: Fixed Host header handling for Kubernetes ServiceMonitor compatibility
-- **🎯 Localhost Support**: Metrics endpoint now works correctly when accessed via localhost or Pod IP addresses
-- **📊 Monitoring Improvement**: Eliminates false-positive "TargetDown" alerts in Prometheus when scraping from within cluster
-
-### New in Version 1.3.2 
-- **🐛 Encryption Key Bugfix**: Fixed encryption key creation during plugin installation
-- **🔧 Key Format Correction**: Proper base64 encoding for database-stored encryption keys (was incorrectly using hex format)
-- **🔄 Migration Support**: Automatic detection and migration of old hex-format encryption keys
-- **🛠️ Token Regeneration**: Auth tokens are regenerated when encryption key format is fixed
-- **🗑️ Uninstall Cleanup**: Added comprehensive plugin data removal during uninstallation (GitHub Issue #1)
-- **📊 Diagnostics Tool**: Added diagnostics.php for encryption key troubleshooting
-- **⚡ Environment Variables**: Improved environment variable handling for SLYMETRICS_ENCRYPTION_KEY
-
-### New in Version 1.3.1 
-- **🗑️ Plugin Uninstall**: Complete database cleanup when plugin is uninstalled
-- **🧹 Data Removal**: Removes all options, transients, and cached data
-- **🔄 Rewrite Rules**: Flushes custom endpoints during uninstall
-
-
-### New in Version 1.3.0
-
-- **🔧 WordPress.org Compliance**: Complete compliance with WordPress.org Plugin Directory requirements
-- **📦 wp_enqueue Implementation**: Migrated from inline scripts/styles to proper wp_enqueue_script/style with wp_add_inline_*
-- **🎨 CSS Namespace Fix**: Added unique 'slymetrics-' prefix to all CSS classes to prevent conflicts
-- **🔒 Security Enhancements**: Added phpcs:ignore comments for legitimate nonce bypasses in public metrics endpoints
-- **🎯 Admin Hook Correction**: Fixed admin page hook from 'tools_page_slymetrics' to 'settings_page_slymetrics'
-- **🚫 Endpoint Optimization**: Removed generic '/metrics' route to reduce potential conflicts with other plugins
-- **📝 Code Quality**: Enhanced WordPress Coding Standards compliance with proper escaping and nonce handling
-- **✅ Copy Functionality**: Restored admin interface copy-to-clipboard functionality with proper CSS targeting
-
-### New in Version 1.2.0
-
-- **🏗️ Enterprise Architecture**: Complete refactoring with 98% reduction in function complexity through modular design
-- **🔒 Advanced Security**: Enterprise-grade input validation, SQL injection prevention, XSS protection, and security headers
-- **⚡ Performance Boost**: 3-tier intelligent caching strategy delivers 3x performance improvement
-- **🛡️ Rate Limiting**: IP-based protection (60 requests/minute) with proper HTTP 429 responses
-- **💾 Memory Optimization**: Lazy loading and optimized data structures for heavy operations
-- **📊 Enhanced Monitoring**: Centralized error logging with structured context and WP_DEBUG integration
-- **🔐 Robust Authentication**: Improved client IP detection with proxy support and enhanced token validation
-- **📝 Code Quality**: Professional PHPDoc documentation and 90% reduction in code duplication
-- **🌐 Multi-Language**: Full English code comments for international development standards
-
-### New in Version 1.1.0
-
-- **Prometheus Naming Compliance**: Updated all metrics to follow Prometheus best practices with `wordpress_` prefix
-- **Consistent Labels**: Standardized all labels to use `wordpress_site` instead of `wp_site`
-- **Environment Variables**: Changed to `SLYMETRICS_*` prefix for better plugin identification
-- **Enhanced Metrics**: Improved metric naming with proper units and types
-- **Updated Endpoints**: Consistent `/slymetrics/` endpoint usage across all configurations
-
 ## 📊 Metrics Overview
 
 | Metric Name | Type | Description | Labels |
@@ -627,7 +558,7 @@ location /wp-json/slymetrics/v1/metrics {
 - Verify token is correctly copied (no extra spaces)
 - Check if environment variable is properly set
 - Ensure WordPress user has admin privileges
-- CHeck if apache rewrite is working properly 
+- CHeck if apache rewrite is working properly
 
 **Empty metrics:**
 - Check WordPress database connectivity
