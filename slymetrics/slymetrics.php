@@ -226,12 +226,6 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
             $parsed_url = wp_parse_url( $request_uri );
             $path = isset( $parsed_url['path'] ) ? trim( $parsed_url['path'], '/' ) : '';
 
-            // Additional security: validate path contains only safe characters
-            if ( ! empty( $path ) && ! preg_match( '/^[a-zA-Z0-9\/_-]+$/', $path ) ) {
-                self::log_error( 'Invalid characters in request path', array( 'path' => $path, 'ip' => self::get_client_ip() ) );
-                return;
-            }
-
             // Check for query parameter pattern first
             // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public metrics endpoint with custom authentication
             if ( isset( $_GET['slymetrics'] ) || isset( $_GET['slybase_metrics'] ) ) {
@@ -246,6 +240,11 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
             );
 
             if ( in_array( $path, $metrics_paths, true ) ) {
+                // Security: validate that the resolved metrics path contains only safe characters.
+                if ( ! preg_match( '/^[a-zA-Z0-9\/_-]+$/', $path ) ) {
+                    self::log_error( 'Invalid characters in request path', array( 'path' => $path, 'ip' => self::get_client_ip() ) );
+                    return;
+                }
                 self::serve_metrics_response();
                 return;
             }
@@ -633,7 +632,8 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                 }
 
                 // Validate database name to prevent injection
-                $db_name = preg_replace( '/[^a-zA-Z0-9_]/', '', DB_NAME );
+                // Hyphens are valid in MySQL database names and therefore allowed here.
+                $db_name = preg_replace( '/[^a-zA-Z0-9_\-]/', '', DB_NAME );
                 if ( $db_name !== DB_NAME ) {
                     self::log_error( 'Database name contains invalid characters', array( 'db_name' => DB_NAME ) );
                     return $out;
@@ -854,8 +854,9 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
                         $ip = trim( explode( ',', $ip )[0] );
                     }
 
-                    // Validate IP address
-                    if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+                    // Validate IP address (private/reserved ranges accepted – Prometheus scrapers
+                    // typically run from within the same network or cluster).
+                    if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
                         return $ip;
                     }
                 }

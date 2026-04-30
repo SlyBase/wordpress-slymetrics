@@ -3,7 +3,7 @@ Contributors: timonf
 Tags: prometheus, metrics, monitoring, observability, performance
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.4.0
+Stable tag: 1.4.2
 Requires PHP: 7.4
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -144,6 +144,11 @@ Yes! All metrics include site labels, making it perfect for monitoring multi-sit
 6. Grafana dashboard selectable Websites
 
 == Changelog ==
+
+= 1.4.2 =
+* **🐛 DB_NAME Bugfix**: Database names containing hyphens (e.g. `slybase-com`) are now accepted; the character allowlist was too strict and blocked valid MySQL database names
+* **🔇 Path Validation Fix**: Security check for invalid characters in request paths is now scoped to metrics endpoints only; previously it logged errors for every WordPress request (CSS, images, etc.)
+* **🌐 Rate Limiting Fix**: Internal and private IP addresses (e.g. Prometheus scrapers running in the same network or Kubernetes cluster) are now correctly identified; previously they all shared one rate-limit bucket under `unknown`
 
 = 1.4.1 =
 * **📝 Moved GitHub repositry to slybase organization
