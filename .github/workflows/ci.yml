@@ -1,0 +1,163 @@
+name: Plugin CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: plugin-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint-workflows:
+    name: Lint GitHub Workflows
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Lint workflow files
+        uses: reviewdog/action-actionlint@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-check
+
+  validate-metadata:
+    name: Validate Plugin Metadata
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Check plugin and readme metadata
+        run: |
+          set -euo pipefail
+
+          plugin_file="slymetrics/slymetrics.php"
+          readme_file="slymetrics/readme.txt"
+
+          plugin_version="$(grep -m1 'Version:' "$plugin_file" | sed 's/.*Version:[[:space:]]*//' | tr -d ' \r\n')"
+          readme_version="$(grep -m1 '^Stable tag:' "$readme_file" | sed 's/^Stable tag:[[:space:]]*//' | tr -d ' \r\n')"
+          plugin_requires_php="$(grep -m1 'Requires PHP:' "$plugin_file" | sed 's/.*Requires PHP:[[:space:]]*//' | tr -d ' \r\n')"
+          readme_requires_php="$(grep -m1 '^Requires PHP:' "$readme_file" | sed 's/^Requires PHP:[[:space:]]*//' | tr -d ' \r\n')"
+          plugin_requires_wp="$(grep -m1 'Requires at least:' "$plugin_file" | sed 's/.*Requires at least:[[:space:]]*//' | tr -d ' \r\n')"
+          readme_requires_wp="$(grep -m1 '^Requires at least:' "$readme_file" | sed 's/^Requires at least:[[:space:]]*//' | tr -d ' \r\n')"
+
+          for value_name in plugin_version readme_version plugin_requires_php readme_requires_php plugin_requires_wp readme_requires_wp; do
+            if [[ -z "${!value_name}" ]]; then
+              echo "::error::Missing required metadata value: ${value_name}"
+              exit 1
+            fi
+          done
+
+          if [[ "$plugin_version" != "$readme_version" ]]; then
+            echo "::error file=$plugin_file::Plugin version ($plugin_version) does not match readme stable tag ($readme_version)"
+            exit 1
+          fi
+
+          if [[ "$plugin_requires_php" != "$readme_requires_php" ]]; then
+            echo "::error file=$plugin_file::Plugin Requires PHP ($plugin_requires_php) does not match readme Requires PHP ($readme_requires_php)"
+            exit 1
+          fi
+
+          if [[ "$plugin_requires_wp" != "$readme_requires_wp" ]]; then
+            echo "::error file=$plugin_file::Plugin Requires at least ($plugin_requires_wp) does not match readme Requires at least ($readme_requires_wp)"
+            exit 1
+          fi
+
+          echo "Metadata is consistent."
+
+      - name: Install gettext
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes gettext
+
+      - name: Validate translation files
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          po_files=(slymetrics/languages/*.po)
+          if (( ${#po_files[@]} == 0 )); then
+            echo "No PO files found."
+            exit 0
+          fi
+
+          mkdir -p /tmp/compiled-mo
+
+          for po_file in "${po_files[@]}"; do
+            locale_name="$(basename "${po_file%.po}")"
+            compiled_mo="/tmp/compiled-mo/${locale_name}.mo"
+            tracked_mo="slymetrics/languages/${locale_name}.mo"
+
+            msgfmt --check-format -o "$compiled_mo" "$po_file"
+
+            if [[ ! -f "$tracked_mo" ]]; then
+              echo "::error file=$po_file::Expected compiled MO file is missing: $tracked_mo"
+              exit 1
+            fi
+
+            if ! cmp -s "$compiled_mo" "$tracked_mo"; then
+              echo "::error file=$po_file::Tracked MO file is out of date. Rebuild $tracked_mo from $po_file."
+              exit 1
+            fi
+          done
+
+          echo "Translation files are valid and in sync."
+
+  lint-php:
+    name: PHP Syntax (PHP ${{ matrix.php-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: [ "7.4", "8.0", "8.1", "8.2", "8.3" ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: none
+
+      - name: Lint PHP files
+        run: |
+          set -euo pipefail
+
+          while IFS= read -r -d '' file; do
+            php -l "$file"
+          done < <(find slymetrics -name '*.php' -print0 | sort -z)
+
+  build-plugin:
+    name: Build Plugin Archive
+    runs-on: ubuntu-latest
+    needs:
+      - lint-workflows
+      - validate-metadata
+      - lint-php
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Build ZIP archive
+        run: bash .github/scripts/build-plugin-zip.sh build/slymetrics.zip
+
+      - name: Inspect ZIP archive
+        run: unzip -l build/slymetrics.zip
+
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: slymetrics-plugin
+          path: build/slymetrics.zip

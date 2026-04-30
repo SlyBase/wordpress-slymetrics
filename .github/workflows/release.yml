@@ -1,206 +1,110 @@
 name: Create WordPress Plugin Release
 
+permissions:
+  contents: write
+
 on:
   push:
-    branches: [master, main]
-    paths:
-      - slymetrics/readme.txt
+    tags:
+      - "v*"
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release (e.g., 1.0.2). Leave empty to use version from readme.txt"
-        required: false
+        description: "Version to release (e.g., 1.2.1)"
+        required: true
         type: string
-      force_release:
-        description: "Force release even if version unchanged"
-        required: false
-        default: false
-        type: boolean
 
 jobs:
-  check-version-change:
-    runs-on: ubuntu-latest
-    outputs:
-      version-changed: ${{ steps.check.outputs.changed }}
-      new-version: ${{ steps.extract.outputs.version }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: Check if stable tag changed
-        id: check
-        run: |
-          # Handle manual dispatch
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "Manual workflow dispatch detected"
-            
-            if [ "${{ inputs.force_release }}" = "true" ]; then
-              echo "Force release enabled"
-              echo "changed=true" >> $GITHUB_OUTPUT
-            else
-              echo "Manual dispatch without force - checking for changes"
-              # For manual dispatch, always consider as changed unless explicitly forced to false
-              echo "changed=true" >> $GITHUB_OUTPUT
-            fi
-          else
-            # Automatic trigger - check for actual changes
-            # Get the stable tag from current commit
-            CURRENT_VERSION=$(grep "Stable tag:" slymetrics/readme.txt | sed 's/Stable tag: //')
-            echo "Current version: $CURRENT_VERSION"
-
-            # Get the stable tag from previous commit
-            git show HEAD~1:slymetrics/readme.txt > readme-old.txt || echo "No previous version"
-            if [ -f readme-old.txt ]; then
-              PREVIOUS_VERSION=$(grep "Stable tag:" readme-old.txt | sed 's/Stable tag: //' || echo "")
-              echo "Previous version: $PREVIOUS_VERSION"
-            else
-              PREVIOUS_VERSION=""
-            fi
-
-            # Check if version changed
-            if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ] && [ ! -z "$CURRENT_VERSION" ]; then
-              echo "changed=true" >> $GITHUB_OUTPUT
-              echo "Version changed from '$PREVIOUS_VERSION' to '$CURRENT_VERSION'"
-            else
-              echo "changed=false" >> $GITHUB_OUTPUT
-              echo "No version change detected"
-            fi
-          fi
-
-      - name: Extract version number
-        id: extract
-        if: steps.check.outputs.changed == 'true'
-        run: |
-          # Check if manual version is provided
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ ! -z "${{ inputs.version }}" ]; then
-            VERSION="${{ inputs.version }}"
-            echo "Using manually provided version: $VERSION"
-          else
-            VERSION=$(grep "Stable tag:" slymetrics/readme.txt | sed 's/Stable tag: //' | tr -d ' \r\n')
-            echo "Using version from readme.txt: $VERSION"
-          fi
-
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Extracted version: $VERSION"
-
   create-release:
-    needs: check-version-change
-    if: needs.check-version-change.outputs.version-changed == 'true'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Workflow Info
-        run: |
-          echo "🚀 WordPress Plugin Release Workflow"
-          echo "Trigger: ${{ github.event_name }}"
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "Manual execution requested"
-            echo "Input version: ${{ inputs.version }}"
-            echo "Force release: ${{ inputs.force_release }}"
-          else
-            echo "Automatic execution triggered by push"
-          fi
-          echo "Repository: ${{ github.repository }}"
-          echo "Branch: ${{ github.ref_name }}"
+        uses: actions/checkout@v6
 
       - name: Get version
         id: version
         run: |
-          VERSION="${{ needs.check-version-change.outputs.new-version }}"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Creating release for version: $VERSION"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          BASE_VERSION="${VERSION%%-*}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "base_version=$BASE_VERSION" >> "$GITHUB_OUTPUT"
+          if echo "$VERSION" | grep -qi "beta\|alpha\|rc"; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Creating release for version: $VERSION (base: $BASE_VERSION)"
 
       - name: Check if release already exists
         id: check-release
         run: |
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "Authorization: Bearer ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/releases/tags/v${{ steps.version.outputs.version }}")
 
           if [ "$RESPONSE" = "200" ]; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Release v${{ steps.version.outputs.version }} already exists"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Release v${{ steps.version.outputs.version }} already exists, skipping"
           else
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "Release v${{ steps.version.outputs.version }} does not exist"
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Create plugin ZIP
         if: steps.check-release.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-
-          # Create temporary directory for the plugin
-          mkdir -p temp/slymetrics
-
-          # Copy plugin files
-          cp -r slymetrics/* temp/slymetrics/
-
-          # Create ZIP file
-          cd temp
-          zip -r "../slymetrics-${VERSION}.zip" slymetrics/
-          cd ..
-
-          # Verify ZIP was created
-          if [ -f "slymetrics-${VERSION}.zip" ]; then
-            echo "ZIP file created successfully: slymetrics-${VERSION}.zip"
-            ls -la "slymetrics-${VERSION}.zip"
-          else
-            echo "ERROR: ZIP file was not created"
-            exit 1
-          fi
+          bash .github/scripts/build-plugin-zip.sh "slymetrics-${VERSION}.zip"
+          ls -la "slymetrics-${VERSION}.zip"
 
       - name: Generate changelog
         if: steps.check-release.outputs.exists == 'false'
         id: changelog
         run: |
           VERSION="${{ steps.version.outputs.version }}"
+          BASE_VERSION="${{ steps.version.outputs.base_version }}"
+          awk -v ver="$BASE_VERSION" '$0 ~ "^= " ver " =" { flag=1; next } flag && /^= [0-9]/ { exit } flag' slymetrics/readme.txt > changelog.txt
 
-          # Extract changelog for this version from readme.txt
-          awk "/= $VERSION =/{flag=1; next} /= [0-9]/{flag=0} flag" slymetrics/readme.txt > changelog.txt
+          if [ -s changelog.txt ]; then
+            {
+              echo "## $BASE_VERSION"
+              echo ""
+              cat changelog.txt
+            } > changelog.release.txt
+            mv changelog.release.txt changelog.txt
+          fi
 
-          # If changelog is empty, create a generic one
           if [ ! -s changelog.txt ]; then
             echo "Release version $VERSION" > changelog.txt
             echo "" >> changelog.txt
             echo "See readme.txt for detailed changes." >> changelog.txt
           fi
-
-          echo "Generated changelog:"
           cat changelog.txt
 
       - name: Create GitHub Release
         if: steps.check-release.outputs.exists == 'false'
-        uses: softprops/action-gh-release@v1
-        id: create_release
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ steps.version.outputs.version }}
           name: SlyMetrics v${{ steps.version.outputs.version }}
           body_path: changelog.txt
           draft: false
-          prerelease: false
-          files: |
-            slymetrics-${{ steps.version.outputs.version }}.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          prerelease: ${{ steps.version.outputs.prerelease }}
+          files: slymetrics-${{ steps.version.outputs.version }}.zip
 
       - name: Release Summary
         if: steps.check-release.outputs.exists == 'false'
         run: |
-          echo "🎉 Successfully created release v${{ steps.version.outputs.version }}"
-          echo "📦 ZIP file: slymetrics-${{ steps.version.outputs.version }}.zip"
-          echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}"
-          echo ""
-          echo "📋 Files included in ZIP:"
+          echo "Successfully created release v${{ steps.version.outputs.version }}"
+          echo "https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}"
           unzip -l "slymetrics-${{ steps.version.outputs.version }}.zip"
 
       - name: Skip Release (Already Exists)
         if: steps.check-release.outputs.exists == 'true'
         run: |
-          echo "ℹ️  Release v${{ steps.version.outputs.version }} already exists, skipping creation"
-          echo "🔗 View existing release: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}"
+          echo "Release v${{ steps.version.outputs.version }} already exists, skipping"
+          echo "https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}"
