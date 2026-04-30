@@ -163,7 +163,7 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-interaction
 
       - name: Run PHPUnit tests
-        run: composer test
+        run: composer test -- --no-coverage
 
   build-plugin:
     name: Build Plugin Archive
