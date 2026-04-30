@@ -67,7 +67,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           BASE_VERSION="${{ steps.version.outputs.base_version }}"
-          awk -v ver="$BASE_VERSION" '$0 ~ "^= " ver " =" { flag=1; next } flag && /^= [0-9]/ { exit } flag' slymetrics/readme.txt > changelog.txt
+          awk -v ver="$BASE_VERSION" '$0 ~ "^## \\[" ver "\\]" { flag=1; next } flag && /^## \[/ { exit } flag' CHANGELOG.md > changelog.txt
 
           if [ -s changelog.txt ]; then
             {
@@ -81,7 +81,7 @@ jobs:
           if [ ! -s changelog.txt ]; then
             echo "Release version $VERSION" > changelog.txt
             echo "" >> changelog.txt
-            echo "See readme.txt for detailed changes." >> changelog.txt
+            echo "See CHANGELOG.md for detailed changes." >> changelog.txt
           fi
           cat changelog.txt
 
