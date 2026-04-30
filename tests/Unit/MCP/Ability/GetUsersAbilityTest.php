@@ -23,6 +23,18 @@ class GetUsersAbilityTest extends TestCase_Base {
         $this->assertSame( 'metrics/get-users', $def['name'] );
     }
 
+    public function test_definition_has_label(): void {
+        $def = GetUsersAbility::definition();
+        $this->assertArrayHasKey( 'label', $def );
+        $this->assertNotEmpty( $def['label'] );
+    }
+
+    public function test_definition_has_category(): void {
+        $def = GetUsersAbility::definition();
+        $this->assertArrayHasKey( 'category', $def );
+        $this->assertNotEmpty( $def['category'] );
+    }
+
     public function test_definition_has_mcp_public_flag(): void {
         $def = GetUsersAbility::definition();
         $this->assertTrue( $def['meta']['mcp']['public'] );

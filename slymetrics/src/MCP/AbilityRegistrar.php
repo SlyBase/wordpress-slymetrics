@@ -45,22 +45,26 @@ class AbilityRegistrar {
     /**
      * Register all WordPress hooks. Called once from Plugin::init().
      *
-     * No-ops silently if wp_register_ability() is not available (WP < 6.9).
+     * The wp_register_ability() guard is deferred to register_abilities() so
+     * the hook is always added even if the function is not yet defined at
+     * plugin-load time (WP loads the Abilities API later).
      */
     public static function init(): void {
-        if ( ! function_exists( 'wp_register_ability' ) ) {
-            return;
-        }
-
-        add_action( 'init',             array( self::class, 'register_abilities' ), 20 );
-        add_action( 'mcp_adapter_init', array( self::class, 'register_mcp_server' ) );
+        add_action( 'wp_abilities_api_init', array( self::class, 'register_abilities' ) );
+        add_action( 'mcp_adapter_init',      array( self::class, 'register_mcp_server' ) );
     }
 
     /**
      * Register all five metric abilities with the WordPress Abilities API.
-     * Called on the 'init' action at priority 20.
+     * Called on the 'wp_abilities_api_init' action (WP 6.9+).
+     *
+     * No-ops silently if wp_register_ability() is not available.
      */
     public static function register_abilities(): void {
+        if ( ! function_exists( 'wp_register_ability' ) ) {
+            return;
+        }
+
         $definitions = array(
             GetSummaryAbility::definition(),
             GetUsersAbility::definition(),

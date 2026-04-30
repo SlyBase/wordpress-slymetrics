@@ -24,6 +24,8 @@ class GetPluginsAbility {
     public static function definition(): array {
         return array(
             'name'               => 'metrics/get-plugins',
+            'label'              => 'Plugin Metrics',
+            'category'           => 'site',
             'description'        => 'Returns plugin counts (active, inactive, total), how many plugins have updates available, and the number of installed themes. No parameters required.',
             'input_schema'       => array( 'type' => 'object', 'properties' => array(), 'required' => array() ),
             'output_schema'      => array(

@@ -30,6 +30,8 @@ class GetPostsAbility {
     public static function definition(): array {
         return array(
             'name'               => 'metrics/get-posts',
+            'label'              => 'Post Metrics',
+            'category'           => 'site',
             'description'        => 'Returns post counts by status for a given post type. Parameter: post_type (string, optional, default "post"). Returns an object with status names as keys (publish, draft, trash, etc.) and counts as values, plus a "total" field.',
             'input_schema'       => array(
                 'type'       => 'object',

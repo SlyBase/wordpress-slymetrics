@@ -23,6 +23,8 @@ class GetUsersAbility {
     public static function definition(): array {
         return array(
             'name'               => 'metrics/get-users',
+            'label'              => 'User Metrics',
+            'category'           => 'user',
             'description'        => 'Returns WordPress user counts by role and the total count. No parameters required.',
             'input_schema'       => array( 'type' => 'object', 'properties' => array(), 'required' => array() ),
             'output_schema'      => array(

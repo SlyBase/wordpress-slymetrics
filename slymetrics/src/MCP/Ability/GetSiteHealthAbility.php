@@ -25,6 +25,8 @@ class GetSiteHealthAbility {
     public static function definition(): array {
         return array(
             'name'               => 'metrics/get-site-health',
+            'label'              => 'Site Health Metrics',
+            'category'           => 'site',
             'description'        => 'Returns WordPress runtime diagnostics: WP version, update availability, PHP version, database version, WP_DEBUG status, and key PHP ini limits (memory_limit, max_execution_time, upload_max_filesize). No parameters required.',
             'input_schema'       => array( 'type' => 'object', 'properties' => array(), 'required' => array() ),
             'output_schema'      => array(
