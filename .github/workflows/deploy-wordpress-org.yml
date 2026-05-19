@@ -41,13 +41,28 @@ jobs:
       - name: Build production directory
         run: |
           mkdir -p build-dist
+
+          # Copy root files (composer.json etc.) excluding dev-only paths
           rsync -a \
             --exclude='.DS_Store' \
+            --exclude='.git/' \
+            --exclude='.github/' \
             --exclude='.gitignore' \
+            --exclude='.gitattributes' \
+            --exclude='.distignore' \
+            --exclude='plan/' \
+            --exclude='build/' \
             --exclude='tests/' \
             --exclude='vendor/' \
             --exclude='phpunit.xml.dist' \
             --exclude='.phpunit.result.cache' \
+            --exclude='assets/' \
+            ./ build-dist/
+
+          # Overlay plugin directory content on top
+          rsync -a \
+            --exclude='.DS_Store' \
+            --exclude='.gitignore' \
             slymetrics/ build-dist/
 
           composer install \
