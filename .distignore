@@ -1,0 +1,17 @@
+# Repo-Meta
+/.git
+/.github
+/.gitignore
+/.gitattributes
+/.distignore
+
+# Dev-Only
+/plan
+/build
+/tests
+
+# Assets (werden separat via ASSETS_DIR deployed)
+/assets
+
+# macOS
+.DS_Store

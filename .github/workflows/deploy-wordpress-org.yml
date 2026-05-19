@@ -1,0 +1,87 @@
+name: Deploy to WordPress.org
+
+permissions:
+  contents: read
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry-run (kein echter SVN-Commit)"
+        required: false
+        default: "true"
+      version:
+        description: "Versions-Override (optional, z.B. 1.7.0)"
+        required: false
+        default: ""
+
+jobs:
+  deploy:
+    name: Deploy to WordPress.org SVN
+    runs-on: ubuntu-latest
+    if: github.event.release.prerelease == false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+          coverage: none
+
+      - name: Install gettext
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes gettext
+
+      - name: Build production directory
+        run: |
+          mkdir -p build-dist
+          rsync -a \
+            --exclude='.DS_Store' \
+            --exclude='.gitignore' \
+            --exclude='tests/' \
+            --exclude='vendor/' \
+            --exclude='phpunit.xml.dist' \
+            --exclude='.phpunit.result.cache' \
+            slymetrics/ build-dist/
+
+          composer install \
+            --working-dir=build-dist \
+            --no-dev \
+            --no-interaction \
+            --prefer-dist \
+            --optimize-autoloader
+
+          rm -f build-dist/composer.lock
+
+          echo "Build contents:"
+          ls -la build-dist/
+
+      - name: Resolve plugin version
+        id: version
+        run: |
+          if [[ -n "${{ inputs.version }}" ]]; then
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+          else
+            # workflow_dispatch or branch run: read from plugin header
+            echo "version=$(grep -m1 'Version:' slymetrics/slymetrics.php | awk '{print $NF}')" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy to WordPress.org SVN
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        with:
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true' }}
+        env:
+          SVN_USERNAME: ${{ secrets.WP_ORG_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.WP_ORG_PASSWORD }}
+          SLUG: slymetrics
+          BUILD_DIR: ./build-dist
+          ASSETS_DIR: ./assets
+          VERSION: ${{ steps.version.outputs.version }}
