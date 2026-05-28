@@ -1,3 +1,5 @@
+[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink?logo=github)](https://github.com/sponsors/slydlake)
+
 # SlyMetrics - WordPress Prometheus and MCP metrics provider
 
 A comprehensive WordPress plugin that exports WordPress metrics in Prometheus and MCP format for monitoring including Grafana Dashboard for multi sites.
