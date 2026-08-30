@@ -156,7 +156,7 @@ class Router {
 
         if ( $current_requests >= 60 ) {
             status_header( 429 );
-            header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
+            header( 'Content-Type: application/json; charset=' . ( get_option( 'blog_charset' ) ?: 'UTF-8' ) );
             header( 'Retry-After: 60' );
             header( 'X-RateLimit-Limit: 60' );
             header( 'X-RateLimit-Remaining: 0' );
@@ -180,7 +180,7 @@ class Router {
         $auth_result = Guard::check( $fake_request );
         if ( is_wp_error( $auth_result ) ) {
             status_header( 401 );
-            header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
+            header( 'Content-Type: application/json; charset=' . ( get_option( 'blog_charset' ) ?: 'UTF-8' ) );
             // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
             echo wp_json_encode( array(
                 'error'   => 'Authentication Required',
@@ -192,7 +192,7 @@ class Router {
         $metrics = Cache::get();
 
         status_header( 200 );
-        header( 'Content-Type: text/plain; charset=' . get_option( 'blog_charset' ) );
+        header( 'Content-Type: text/plain; charset=' . ( get_option( 'blog_charset' ) ?: 'UTF-8' ) );
         header( 'X-Content-Type-Options: nosniff' );
         header( 'X-Frame-Options: DENY' );
         header( 'X-XSS-Protection: 1; mode=block' );

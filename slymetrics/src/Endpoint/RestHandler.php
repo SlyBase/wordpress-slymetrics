@@ -38,7 +38,7 @@ class RestHandler {
     public static function callback( \WP_REST_Request $request ): \WP_REST_Response {
         $metrics  = Cache::get();
         $response = new \WP_REST_Response( $metrics, 200 );
-        $response->header( 'Content-Type', 'text/plain; charset=' . get_option( 'blog_charset' ) );
+        $response->header( 'Content-Type', 'text/plain; charset=' . ( get_option( 'blog_charset' ) ?: 'UTF-8' ) );
         return $response;
     }
 
@@ -75,7 +75,7 @@ class RestHandler {
         }
 
         if ( ! headers_sent() ) {
-            header( 'Content-Type: text/plain; charset=' . get_option( 'blog_charset' ) );
+            header( 'Content-Type: text/plain; charset=' . ( get_option( 'blog_charset' ) ?: 'UTF-8' ) );
         }
 
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- raw Prometheus exposition format
