@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.5.1]
+### Fixes
+- Metrics endpoint no longer sends a broken `Content-Type` header (empty `charset`) on sites where the `blog_charset` option is empty, which caused Prometheus to permanently fail the scrape.
+
 ## [1.5.0]
 ### Features
 - Expose WordPress metrics via the WordPress MCP Adapter (WP 6.9+): five abilities accessible as MCP tools for AI agents — `metrics/get-summary`, `metrics/get-users`, `metrics/get-posts`, `metrics/get-plugins`, and `metrics/get-site-health`.

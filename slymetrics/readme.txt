@@ -3,7 +3,7 @@ Contributors: timonf
 Tags: prometheus, metrics, monitoring, observability, performance, mcp
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.5.0
+Stable tag: 1.5.1
 Requires PHP: 7.4
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -146,6 +146,10 @@ Yes! All metrics include site labels, making it perfect for monitoring multi-sit
 
 == Changelog ==
 
+= 1.5.1 =
+Fixes:
+* Metrics endpoint no longer sends a broken Content-Type header (empty charset) on sites where the blog_charset option is empty, which caused Prometheus to permanently fail the scrape.
+
 = 1.5.0 =
 Features:
 * Expose WordPress metrics via the WordPress MCP Adapter (WP 6.9+): five abilities accessible as MCP tools for AI agents: metrics/get-summary, metrics/get-users, metrics/get-posts, metrics/get-plugins, and metrics/get-site-health.
@@ -153,6 +157,9 @@ Features:
 * Add three new MCP abilities exposing all remaining Prometheus metrics: metrics/get-content (comments, categories, media, tags), metrics/get-storage (autoload options, database size, directory sizes), and metrics/get-health-checks (site health check summary and individual test results).
 
 == Upgrade Notice ==
+
+= 1.5.1 =
+Fixes broken Prometheus scrapes on sites with an empty blog_charset option. Recommended for anyone seeing TargetDown for the metrics endpoint.
 
 = 1.5.0 =
 Adds MCP Adapter integration (WordPress 6.9+) with eight AI agent tools covering all Prometheus metrics. No breaking changes; update is safe for all installations.
