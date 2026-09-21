@@ -1,7 +1,7 @@
-name: 🐞Bug report
-description: Report a bug related for the WordPress plugin.
+name: 🐞 Bug report
+description: Report a bug related to the WordPress plugin.
 title: "[slymetrics] "
-labels: bug
+type: bug
 assignees:
   - slydlake
 
@@ -11,6 +11,24 @@ body:
       value: |
         Thanks for filing a bug report! Please fill out the fields below.
         Important: The issue title should start with the plugin name in square brackets, e.g. `[slymetrics] Crash on startup`.
+
+  - type: input
+    id: plugin_version
+    attributes:
+      label: Plugin version (optional)
+      description: The slymetrics plugin version (e.g. `1.5.1`).
+      placeholder: "1.5.1"
+    validations:
+      required: false
+
+  - type: input
+    id: wp_version
+    attributes:
+      label: WordPress / PHP version (optional)
+      description: WordPress and PHP versions (e.g. `WP 6.5 / PHP 8.3`).
+      placeholder: "WP 6.5 / PHP 8.3"
+    validations:
+      required: false
 
   - type: textarea
     id: reproduction_steps
@@ -46,4 +64,4 @@ body:
     id: logs
     attributes:
       label: Relevant logs
-      description: WordPress logs...
+      description: Relevant `wp-errors.log` entries or PHP error output.

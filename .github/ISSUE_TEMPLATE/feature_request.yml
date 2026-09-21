@@ -1,7 +1,7 @@
 name: 🚀 Feature request
 description: Request a new feature or enhancement for the WordPress plugin.
 title: "[slymetrics] "
-labels: enhancement
+type: enhancement
 assignees:
   - slydlake
 
@@ -11,6 +11,15 @@ body:
       value: |
         Thanks for proposing a feature! Please fill out the fields below so we can evaluate the request.
         Important: The issue title should start with the plugin name in square brackets, e.g. `[slymetrics] Add configuration for <feature>`.
+
+  - type: input
+    id: plugin_version
+    attributes:
+      label: Plugin version (optional)
+      description: The slymetrics plugin version (e.g. `1.5.1`).
+      placeholder: "1.5.1"
+    validations:
+      required: false
 
   - type: textarea
     id: feature_description
@@ -36,7 +45,7 @@ body:
     id: configuration_files
     attributes:
       label: Configuration files (optional)
-      description: Paste relevant parts of your configuration files here or provide a Gist/URL if applicable.
+      description: Paste relevant parts of your configuration files here or provide a Gist/URL.
 
   - type: textarea
     id: notes

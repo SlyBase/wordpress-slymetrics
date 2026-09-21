@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+### Changes
+- Switched GitHub issue templates to the repository issue types (`bug` / `enhancement`) instead of labels, fixed a typo in the bug report description, added optional plugin/WordPress/PHP version fields, clarified the log field, and disabled blank issues.
+
 ## [1.5.1]
 ### Fixes
 - Metrics endpoint no longer sends a broken `Content-Type` header (empty `charset`) on sites where the `blog_charset` option is empty, which caused Prometheus to permanently fail the scrape.
