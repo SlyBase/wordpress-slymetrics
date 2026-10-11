@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "composer"
-    directory: "/slymetrics"
+    directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
