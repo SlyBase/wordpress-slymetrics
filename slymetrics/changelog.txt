@@ -2,6 +2,12 @@
 Fixes:
 * Core update status (update_available in the wordpress_version metric and in the MCP metrics/get-site-health ability) is now detected on front-end requests too. It was always 0/false because get_core_updates() only exists in wp-admin; the update_core transient is now read directly.
 
+Security:
+* Rate-limit transient keys now use SHA-256 instead of MD5 (Snyk php/InsecureHash). The key is only a cache identifier; existing rate-limit counters reset once on upgrade.
+
+Changes:
+* CI: the apt mirror fallback in install-gettext.sh now uses HTTPS instead of HTTP.
+
 = 1.5.1 =
 Fixes:
 * Metrics endpoint no longer sends a broken Content-Type header (empty charset) on sites where the blog_charset option is empty, which caused Prometheus to permanently fail the scrape.

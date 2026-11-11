@@ -20,6 +20,6 @@ fi
 echo "apt failed; switching to archive.ubuntu.com and retrying."
 for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list /etc/apt/apt-mirrors.txt; do
   [ -f "$f" ] || continue
-  sudo sed -i -E 's#https?://(azure\.archive|security)\.ubuntu\.com#http://archive.ubuntu.com#g' "$f"
+  sudo sed -i -E 's#https?://(azure\.archive|security)\.ubuntu\.com#https://archive.ubuntu.com#g' "$f"
 done
 install_gettext

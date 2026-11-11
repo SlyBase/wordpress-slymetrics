@@ -139,6 +139,21 @@ class Router {
     }
 
     /**
+     * Build the rate-limit transient key for a client IP.
+     *
+     * Uses SHA-256 instead of MD5 so no weak hash remains in the plugin
+     * (Snyk php/InsecureHash). The key is only a cache identifier for the
+     * per-IP request counter, never a security credential.
+     *
+     * @internal Public only for unit testing.
+     * @param string $ip Client IP address.
+     * @return string Transient key (86 chars; WordPress allows 172).
+     */
+    public static function rate_limit_key( string $ip ): string {
+        return 'slymetrics_rate_limit_' . hash( 'sha256', $ip );
+    }
+
+    /**
      * Authenticate, rate-limit, and serve the metrics response.
      * Calls exit() on completion.
      */
@@ -151,7 +166,7 @@ class Router {
 
         // Rate limiting: max 60 requests per minute per IP
         $client_ip        = IpDetector::get_client_ip();
-        $rate_limit_key   = 'slymetrics_rate_limit_' . md5( $client_ip );
+        $rate_limit_key   = self::rate_limit_key( $client_ip );
         $current_requests = (int) get_transient( $rate_limit_key );
 
         if ( $current_requests >= 60 ) {
