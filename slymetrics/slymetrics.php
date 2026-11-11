@@ -44,6 +44,7 @@ $slymetrics_src_files = array(
     'Metrics/Builder/ContentMetrics.php',
     'Metrics/Builder/HeavyMetrics.php',
     'Metrics/Builder/StaticMetrics.php',
+    'Metrics/Builder/ChecksumMetrics.php',
     'Metrics/Cache.php',
     'Endpoint/Router.php',
     'Endpoint/RestHandler.php',
@@ -91,6 +92,8 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
         const CACHE_TTL_HEAVY  = \SlyMetrics\Metrics\Cache::TTL_HEAVY;
         const CACHE_KEY_STATIC = \SlyMetrics\Metrics\Cache::KEY_STATIC;
         const CACHE_TTL_STATIC = \SlyMetrics\Metrics\Cache::TTL_STATIC;
+        const CACHE_KEY_CHECKSUM = \SlyMetrics\Metrics\Cache::KEY_CHECKSUM;
+        const CACHE_TTL_CHECKSUM = \SlyMetrics\Metrics\Cache::TTL_CHECKSUM;
 
         // -----------------------------------------------------------------------
         // Public methods (used by WordPress hooks and tests)

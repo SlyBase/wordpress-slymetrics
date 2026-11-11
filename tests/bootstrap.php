@@ -206,16 +206,19 @@ if ( ! function_exists( 'delete_option' ) ) {
 }
 if ( ! function_exists( 'get_transient' ) ) {
     function get_transient( string $transient ): mixed {
-        return false;
+        // Tests set $GLOBALS['slymetrics_test_transients'][ $name ] to override (functions here cannot be stubbed).
+        return $GLOBALS['slymetrics_test_transients'][ $transient ] ?? false;
     }
 }
 if ( ! function_exists( 'set_transient' ) ) {
     function set_transient( string $transient, mixed $value, int $expiration = 0 ): bool {
+        $GLOBALS['slymetrics_test_transients'][ $transient ] = $value;
         return true;
     }
 }
 if ( ! function_exists( 'delete_transient' ) ) {
     function delete_transient( string $transient ): bool {
+        unset( $GLOBALS['slymetrics_test_transients'][ $transient ] );
         return true;
     }
 }
@@ -283,6 +286,16 @@ if ( ! function_exists( 'wp_register_ability' ) ) {
 if ( ! function_exists( 'is_ssl' ) ) {
     function is_ssl(): bool {
         return false;
+    }
+}
+if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
+    function wp_remote_retrieve_response_code( mixed $response ): int|string {
+        return is_array( $response ) ? ( $response['response']['code'] ?? '' ) : '';
+    }
+}
+if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
+    function wp_remote_retrieve_body( mixed $response ): string {
+        return is_array( $response ) ? ( $response['body'] ?? '' ) : '';
     }
 }
 if ( ! function_exists( 'admin_url' ) ) {
