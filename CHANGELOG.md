@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changes
 - Checksum results are cached for one hour and re-verified immediately after core or plugin updates; official checksum documents are cached for 24 hours with a 20-second fetch budget, so scrapes stay fast and external calls stay bounded.
+- Missing files (e.g. removed bundled themes) are reported separately and do not raise integrity alarms; only modified file content does.
 
 ## [1.5.2]
 ### Fixes
