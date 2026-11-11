@@ -361,19 +361,35 @@ class ChecksumMetricsTest extends TestCase_Base {
 	public function test_single_file_plugin_uses_filename_slug_and_plugin_root(): void {
 		\Brain\Monkey\Functions\expect( 'get_locale' )->andReturn( 'en_US' );
 		\Brain\Monkey\Functions\expect( 'get_plugins' )->andReturn( array(
-			'hello.php' => array( 'Version' => '1.7.2' ),
+			'single-plugin.php' => array( 'Version' => '2.0' ),
 		) );
-		$this->make_file( WP_PLUGIN_DIR . '/hello.php', 'hello content' );
+		$this->make_file( WP_PLUGIN_DIR . '/single-plugin.php', 'single content' );
 		$this->stub_http( array(
 			self::CORE_URL_EN => $this->http_ok( wp_json_encode( array( 'checksums' => array() ) ) ),
-			'https://downloads.wordpress.org/plugin-checksums/hello/1.7.2.json' => $this->http_ok( wp_json_encode( array(
-				'files' => array( 'hello.php' => array( 'md5' => md5( 'hello content' ) ) ),
+			'https://downloads.wordpress.org/plugin-checksums/single-plugin/2.0.json' => $this->http_ok( wp_json_encode( array(
+				'files' => array( 'single-plugin.php' => array( 'md5' => md5( 'single content' ) ) ),
 			) ) ),
 		) );
 
 		$out = ChecksumMetrics::build( 'WP SITE' );
 
-		$this->assertStringContainsString( 'type="plugin",slug="hello",version="1.7.2",status="verified"} 1', $out );
+		$this->assertStringContainsString( 'type="plugin",slug="single-plugin",version="2.0",status="verified"} 1', $out );
+	}
+
+	public function test_core_bundled_hello_php_is_skipped_in_plugin_check(): void {
+		// The hello.php bundled with core differs from the hello-dolly
+		// directory package; its integrity is covered by the core checksums.
+		\Brain\Monkey\Functions\expect( 'get_locale' )->andReturn( 'en_US' );
+		\Brain\Monkey\Functions\expect( 'get_plugins' )->andReturn( array(
+			'hello.php' => array( 'Version' => '1.7.2' ),
+		) );
+		$this->stub_http( array(
+			self::CORE_URL_EN => $this->http_ok( wp_json_encode( array( 'checksums' => array() ) ) ),
+		) );
+
+		$out = ChecksumMetrics::build( 'WP SITE' );
+
+		$this->assertStringNotContainsString( 'hello', $out );
 	}
 
 	public function test_plugin_without_version_is_unavailable_without_http_call(): void {

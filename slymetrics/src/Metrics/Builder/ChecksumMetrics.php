@@ -45,6 +45,11 @@ class ChecksumMetrics {
 		$out .= self::build_core( $site_name, $deadline );
 
 		foreach ( self::get_installed_plugins() as $plugin_file => $data ) {
+			// hello.php ships with core but differs from the hello-dolly
+			// directory package; its integrity is covered by the core check.
+			if ( 'hello.php' === $plugin_file ) {
+				continue;
+			}
 			$out .= self::build_plugin( $site_name, (string) $plugin_file, is_array( $data ) ? $data : array(), $deadline );
 		}
 
