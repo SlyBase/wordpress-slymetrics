@@ -15,9 +15,10 @@ Wordpress Plugin page: [https://wordpress.org/plugins/slymetrics](https://wordpr
 - **🌐 Multiple Endpoints**: Clean URLs (`/slymetrics/metrics`), REST API, and query parameter fallbacks
 - **🤖 MCP Integration**: Expose metrics via WordPress MCP Adapter as AI-accessible tools (`metrics/get-summary`, `metrics/get-users`, `metrics/get-posts`, `metrics/get-plugins`, `metrics/get-site-health`, `metrics/get-content`, `metrics/get-storage`, `metrics/get-health-checks`)
 - **🏥 Health Monitoring**: Integration with WordPress Site Health API for detailed system checks
+- **🔐 File Integrity Monitoring**: Verify core and plugin files against official wordpress.org checksums
 - **📈 Grafana Optimized**: Display-friendly metrics specifically designed for clean table visualizations
 - **🐳 Container Ready**: Environment variable support for Docker, Kubernetes, and CI/CD pipelines
-- **⚡ High Performance**: 3-tier intelligent caching system with 3x performance improvement
+- **⚡ High Performance**: 4-tier intelligent caching system with 3x performance improvement
 - **🔄 Auto-Discovery**: Automatic endpoint detection and fallback mechanisms
 - **📱 Admin Interface**: User-friendly settings page with token management and health status
 - **🛡️ Production Ready**: Enterprise-grade architecture with comprehensive error handling
@@ -39,6 +40,8 @@ Wordpress Plugin page: [https://wordpress.org/plugins/slymetrics](https://wordpr
 | `wordpress_media_total` | counter | Total number of media items | `wordpress_site` |
 | `wordpress_tags_total` | counter | Total number of tags | `wordpress_site` |
 | `wordpress_version_info` | gauge | WordPress version information | `wordpress_site`, `version`, `update_available` |
+| `wordpress_checksum_valid` | gauge | File integrity against official wordpress.org checksums (1 = verified, 0 = modified or unavailable) | `wordpress_site`, `type`: `core`, `plugin`, `slug`, `version`, `status`: `verified`, `modified`, `unavailable` |
+| `wordpress_checksum_files_total` | gauge | Number of files per checksum verification result | `wordpress_site`, `type`, `slug`, `version`, `result`: `match`, `mismatch`, `missing` |
 | `wordpress_autoload_options_total` | gauge | Number of autoloaded options | `wordpress_site` |
 | `wordpress_autoload_size_bytes` | gauge | Size of autoloaded options in bytes | `wordpress_site` |
 | `wordpress_autoload_transients_total` | gauge | Number of autoloaded transients | `wordpress_site` |
@@ -306,6 +309,8 @@ kubectl get secret slymetrics-secrets -o jsonpath='{.data.slymetrics-bearer-toke
 | Metric Name | Type | Description | Labels | Example |
 |-------------|------|-------------|--------|---------|
 | `wordpress_version_info` | gauge | WordPress version information | `wordpress_site`, `version`, `update_available` | `wordpress_version_info{version="6.8.2"} 1` |
+| `wordpress_checksum_valid` | gauge | File integrity against official wordpress.org checksums | `wordpress_site`, `type`, `slug`, `version`, `status` | `wordpress_checksum_valid{type="core",slug="wordpress",version="6.8.2",status="verified"} 1` |
+| `wordpress_checksum_files_total` | gauge | Number of files per checksum verification result | `wordpress_site`, `type`, `slug`, `version`, `result` | `wordpress_checksum_files_total{type="core",slug="wordpress",version="6.8.2",result="match"} 2998` |
 | `wordpress_php_info` | gauge | PHP configuration details | `wordpress_site`, `type`, `label` | `wordpress_php_info{type="version",label="8.2.29"} 80229` |
 | `wordpress_database_size_bytes` | gauge | Database size in bytes | `wordpress_site` | `wordpress_database_size_bytes{} 125450000` |
 | `wordpress_directory_size_bytes` | gauge | Directory sizes in bytes | `wordpress_site`, `directory` | `wordpress_directory_size_bytes{directory="uploads"} 512800000` |

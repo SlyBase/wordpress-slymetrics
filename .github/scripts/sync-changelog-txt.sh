@@ -53,12 +53,21 @@ function append_blank_line() {
         }
 
         lines[++out_count] = "= " version " ="
-        last_was_blank = 0
+        last_was_blank = 1
         in_versions = 1
         next
     }
 
     if (!in_versions) {
+        next
+    }
+
+    if (line ~ /^### /) {
+        category = line
+        sub(/^### /, "", category)
+        append_blank_line()
+        lines[++out_count] = category ":"
+        last_was_blank = 0
         next
     }
 
