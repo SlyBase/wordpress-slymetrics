@@ -14,7 +14,6 @@ declare( strict_types=1 );
 
 namespace SlyMetrics\Tests\Unit\MCP\Ability;
 
-use Brain\Monkey;
 use SlyMetrics\MCP\Ability\GetSiteHealthAbility;
 use SlyMetrics\Tests\Unit\TestCase_Base;
 
@@ -61,10 +60,6 @@ class GetSiteHealthAbilityTest extends TestCase_Base {
     }
 
     public function test_execute_returns_all_expected_sections(): void {
-        Monkey\Functions\stubs(
-            array( 'get_core_updates' => array() )
-        );
-
         $result = GetSiteHealthAbility::execute();
 
         $this->assertArrayHasKey( 'wordpress', $result );
@@ -75,10 +70,6 @@ class GetSiteHealthAbilityTest extends TestCase_Base {
 
     public function test_execute_wordpress_version_is_string(): void {
         // get_bloginfo('version') returns '6.5' from bootstrap
-        Monkey\Functions\stubs(
-            array( 'get_core_updates' => array() )
-        );
-
         $result = GetSiteHealthAbility::execute();
 
         $this->assertIsString( $result['wordpress']['version'] );
@@ -86,20 +77,12 @@ class GetSiteHealthAbilityTest extends TestCase_Base {
     }
 
     public function test_execute_php_version_matches_runtime(): void {
-        Monkey\Functions\stubs(
-            array( 'get_core_updates' => array() )
-        );
-
         $result = GetSiteHealthAbility::execute();
 
         $this->assertSame( PHP_VERSION, $result['php']['version'] );
     }
 
     public function test_execute_debug_flags_are_booleans(): void {
-        Monkey\Functions\stubs(
-            array( 'get_core_updates' => array() )
-        );
-
         $result = GetSiteHealthAbility::execute();
 
         $this->assertIsBool( $result['debug']['wp_debug'] );
@@ -108,21 +91,16 @@ class GetSiteHealthAbilityTest extends TestCase_Base {
 
     public function test_execute_update_available_false_when_no_updates(): void {
         // get_core_updates returns [] → no upgrade available
-        Monkey\Functions\stubs(
-            array( 'get_core_updates' => array() )
-        );
-
         $result = GetSiteHealthAbility::execute();
 
         $this->assertFalse( $result['wordpress']['update_available'] );
     }
 
     public function test_execute_update_available_true_when_upgrade_response(): void {
-        $upgrade           = new \stdClass();
-        $upgrade->response = 'upgrade';
-
-        Monkey\Functions\stubs(
-            array( 'get_core_updates' => array( $upgrade ) )
+        // get_core_updates() is deliberately NOT defined: it only exists in wp-admin (issue #10).
+        $this->assertFalse( function_exists( 'get_core_updates' ) );
+        $GLOBALS['slymetrics_test_transients']['update_core'] = (object) array(
+            'updates' => array( (object) array( 'response' => 'upgrade' ) ),
         );
 
         $result = GetSiteHealthAbility::execute();
@@ -131,10 +109,6 @@ class GetSiteHealthAbilityTest extends TestCase_Base {
     }
 
     public function test_execute_php_section_has_expected_keys(): void {
-        Monkey\Functions\stubs(
-            array( 'get_core_updates' => array() )
-        );
-
         $result = GetSiteHealthAbility::execute();
 
         $this->assertArrayHasKey( 'version', $result['php'] );

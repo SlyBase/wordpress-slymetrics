@@ -4,6 +4,7 @@ namespace SlyMetrics\Metrics\Builder;
 
 defined( 'ABSPATH' ) || exit;
 
+use SlyMetrics\Util\CoreUpdate;
 use SlyMetrics\Util\Formatter;
 use SlyMetrics\Util\Logger;
 use SlyMetrics\Util\SizeConverter;
@@ -39,21 +40,7 @@ class StaticMetrics {
      */
     private static function build_wp_version_metrics( string $site_name ): string {
         $wp_version       = get_bloginfo( 'version' );
-        $update_available = 0;
-
-        if ( ! wp_installing() && function_exists( 'get_core_updates' ) ) {
-            try {
-                $core_updates = get_core_updates();
-                if ( is_array( $core_updates ) && ! empty( $core_updates ) ) {
-                    $latest = $core_updates[0];
-                    if ( isset( $latest->response ) && $latest->response === 'upgrade' ) {
-                        $update_available = 1;
-                    }
-                }
-            } catch ( \Exception $e ) {
-                // Ignore errors in update check
-            }
-        }
+        $update_available = CoreUpdate::is_available() ? 1 : 0;
 
         $out  = "# HELP wordpress_version WordPress version information.\n";
         $out .= "# TYPE wordpress_version gauge\n";
