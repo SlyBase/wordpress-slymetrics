@@ -34,9 +34,7 @@ jobs:
           coverage: none
 
       - name: Install gettext
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes gettext
+        run: .github/scripts/install-gettext.sh
 
       - name: Build production directory
         run: |
