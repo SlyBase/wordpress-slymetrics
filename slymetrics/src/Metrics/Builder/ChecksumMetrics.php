@@ -54,8 +54,11 @@ class ChecksumMetrics {
 	/**
 	 * Compare a map of relative file paths => expected MD5 against real files.
 	 *
+	 * The expected value may be a single hash or a list of acceptable hashes
+	 * (wordpress.org ships multiple official variants for some files).
+	 *
 	 * @internal Public only for unit testing.
-	 * @param array  $checksums Relative path => expected MD5 hash.
+	 * @param array  $checksums Relative path => expected MD5 hash(es).
 	 * @param string $base_dir  Directory the paths are relative to (trailing slash).
 	 * @return array{match:int,mismatch:int,missing:int}
 	 */
@@ -66,13 +69,21 @@ class ChecksumMetrics {
 			'missing'  => 0,
 		);
 
-		foreach ( $checksums as $file => $expected_md5 ) {
+		foreach ( $checksums as $file => $expected ) {
 			$path = $base_dir . $file;
 			if ( ! is_file( $path ) ) {
 				$counts['missing']++;
 				continue;
 			}
-			if ( hash_equals( (string) $expected_md5, (string) md5_file( $path ) ) ) {
+			$actual = (string) md5_file( $path );
+			$ok     = false;
+			foreach ( (array) $expected as $hash ) {
+				if ( hash_equals( (string) $hash, $actual ) ) {
+					$ok = true;
+					break;
+				}
+			}
+			if ( $ok ) {
 				$counts['match']++;
 			} else {
 				$counts['mismatch']++;
@@ -92,18 +103,63 @@ class ChecksumMetrics {
 	 * @return string
 	 */
 	private static function build_core( string $site_name, float $deadline ): string {
-		$version = get_bloginfo( 'version' );
-		$locale  = function_exists( 'get_locale' ) ? get_locale() : 'en_US';
-		$url     = self::CORE_API_URL . '?version=' . rawurlencode( $version ) . '&locale=' . rawurlencode( $locale );
-		$data    = self::fetch_json( $url, $deadline );
+		$version   = get_bloginfo( 'version' );
+		$locale    = function_exists( 'get_locale' ) ? get_locale() : 'en_US';
+		$checksums = self::core_checksums( $version, $locale, $deadline );
 
-		if ( null === $data || ! isset( $data['checksums'] ) || ! is_array( $data['checksums'] ) ) {
+		if ( null === $checksums ) {
 			Logger::error( 'Core checksums unavailable', array( 'version' => $version, 'locale' => $locale ) );
 			return self::unavailable( $site_name, 'core', 'wordpress', $version );
 		}
 
-		$counts = self::verify_files( $data['checksums'], ABSPATH );
+		$counts = self::verify_files( $checksums, ABSPATH );
 		return self::render( $site_name, 'core', 'wordpress', $version, $counts );
+	}
+
+	/**
+	 * Merge the official core checksums of the site locale and the en_US base
+	 * package. A file is accepted when it matches ANY official variant:
+	 * localized packages (e.g. de_DE) ship a handful of files with different
+	 * content (wp-includes/version.php, wp-config-sample.php), and many hosts
+	 * run en_US-based images with a non-en_US UI locale.
+	 *
+	 * @param string $version
+	 * @param string $locale
+	 * @param float  $deadline
+	 * @return array|null Merged path => hash(es) map, or null if no reference could be fetched.
+	 */
+	private static function core_checksums( string $version, string $locale, float $deadline ): ?array {
+		$locales = array( $locale );
+		if ( 'en_US' !== $locale ) {
+			$locales[] = 'en_US';
+		}
+
+		$merged = null;
+		foreach ( $locales as $loc ) {
+			$url  = self::CORE_API_URL . '?version=' . rawurlencode( $version ) . '&locale=' . rawurlencode( $loc );
+			$data = self::fetch_json( $url, $deadline );
+			if ( null === $data || ! isset( $data['checksums'] ) || ! is_array( $data['checksums'] ) ) {
+				continue;
+			}
+			if ( null === $merged ) {
+				$merged = array();
+			}
+			foreach ( $data['checksums'] as $file => $md5 ) {
+				if ( ! isset( $merged[ $file ] ) ) {
+					$merged[ $file ] = $md5;
+					continue;
+				}
+				$accepted = (array) $merged[ $file ];
+				foreach ( (array) $md5 as $hash ) {
+					if ( ! in_array( $hash, $accepted, true ) ) {
+						$accepted[] = $hash;
+					}
+				}
+				$merged[ $file ] = $accepted;
+			}
+		}
+
+		return $merged;
 	}
 
 	/**
@@ -130,7 +186,8 @@ class ChecksumMetrics {
 
 		$md5s = array();
 		foreach ( $reference['files'] as $file => $hashes ) {
-			$md5s[ $file ] = ( is_array( $hashes ) && isset( $hashes['md5'] ) ) ? (string) $hashes['md5'] : '';
+			// Keep string or list of acceptable hashes; verify_files handles both.
+			$md5s[ $file ] = ( is_array( $hashes ) && isset( $hashes['md5'] ) ) ? $hashes['md5'] : '';
 		}
 
 		// Checksum paths are relative to the plugin directory; single-file
@@ -210,6 +267,10 @@ class ChecksumMetrics {
 	/**
 	 * Render the valid gauge plus per-result file counts.
 	 *
+	 * Missing files (e.g. removed bundled themes) are reported in the detail
+	 * metric but do not flip the valid bit – only content mismatches do
+	 * (same distinction wp-cli makes between warnings and errors).
+	 *
 	 * @param string $site_name
 	 * @param string $type    "core" or "plugin".
 	 * @param string $slug
@@ -218,7 +279,7 @@ class ChecksumMetrics {
 	 * @return string
 	 */
 	private static function render( string $site_name, string $type, string $slug, string $version, array $counts ): string {
-		$valid  = ( 0 === $counts['mismatch'] && 0 === $counts['missing'] ) ? 1 : 0;
+		$valid  = ( 0 === $counts['mismatch'] ) ? 1 : 0;
 		$labels = array(
 			'type'    => $type,
 			'slug'    => $slug,

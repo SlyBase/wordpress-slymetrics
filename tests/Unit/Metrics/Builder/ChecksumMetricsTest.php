@@ -83,6 +83,23 @@ class ChecksumMetricsTest extends TestCase_Base {
 		);
 	}
 
+	public function test_verify_files_accepts_any_of_multiple_official_hashes(): void {
+		// Real-world: wordpress.org lists several acceptable hashes for some
+		// plugin files (e.g. readme.txt variants). Seen on code-block-pro,
+		// email-no-bot, jwt-authentication-for-wp-rest-api.
+		$dir = sys_get_temp_dir() . '/slymetrics_cs_' . uniqid() . '/';
+		$this->make_file( $dir . 'readme.txt', 'variant two' );
+
+		$counts = ChecksumMetrics::verify_files(
+			array(
+				'readme.txt' => array( md5( 'variant one' ), md5( 'variant two' ) ),
+			),
+			$dir
+		);
+
+		$this->assertSame( array( 'match' => 1, 'mismatch' => 0, 'missing' => 0 ), $counts );
+	}
+
 	// -----------------------------------------------------------------------
 	// Slice 2: core checksums end-to-end through build()
 	// -----------------------------------------------------------------------
@@ -146,7 +163,9 @@ class ChecksumMetricsTest extends TestCase_Base {
 		$this->assertStringContainsString( 'type="core",slug="wordpress",version="6.5",result="mismatch"} 1', $out );
 	}
 
-	public function test_core_modified_when_a_listed_file_is_missing(): void {
+	public function test_core_missing_files_are_reported_but_do_not_flip_valid(): void {
+		// Deleted bundled themes/plugins are normal hosting practice, not
+		// tampering (wp-cli treats missing as warning, mismatch as error).
 		$this->stub_no_plugins();
 		$this->stub_http( array(
 			self::CORE_URL_EN => $this->http_ok( wp_json_encode( array(
@@ -156,7 +175,7 @@ class ChecksumMetricsTest extends TestCase_Base {
 
 		$out = ChecksumMetrics::build( 'WP SITE' );
 
-		$this->assertStringContainsString( 'type="core",slug="wordpress",version="6.5",status="modified"} 0', $out );
+		$this->assertStringContainsString( 'type="core",slug="wordpress",version="6.5",status="verified"} 1', $out );
 		$this->assertStringContainsString( 'type="core",slug="wordpress",version="6.5",result="missing"} 1', $out );
 	}
 
@@ -199,12 +218,64 @@ class ChecksumMetricsTest extends TestCase_Base {
 		\Brain\Monkey\Functions\expect( 'get_locale' )->andReturn( 'de_DE' );
 		$url = 'https://api.wordpress.org/core/checksums/1.0/?version=6.5&locale=de_DE';
 		$this->stub_http( array(
-			$url => $this->http_ok( wp_json_encode( array( 'checksums' => array() ) ) ),
+			$url              => $this->http_ok( wp_json_encode( array( 'checksums' => array() ) ) ),
+			self::CORE_URL_EN => $this->http_ok( wp_json_encode( array( 'checksums' => array() ) ) ),
 		) );
 
 		$out = ChecksumMetrics::build( 'WP SITE' );
 
 		$this->assertStringContainsString( 'type="core",slug="wordpress",version="6.5",status="verified"} 1', $out );
+	}
+
+	public function test_core_accepts_en_us_variant_of_a_localized_file(): void {
+		// Real-world: the fleet runs en_US-based images with a de_DE UI locale.
+		// wp-includes/version.php and wp-config-sample.php differ between the
+		// official packages; both variants are official and must be accepted.
+		\Brain\Monkey\Functions\expect( 'get_plugins' )->andReturn( array() );
+		\Brain\Monkey\Functions\expect( 'get_locale' )->andReturn( 'de_DE' );
+		$this->make_file( ABSPATH . 'wp-includes/version.php', 'en_US variant' );
+		$this->stub_http( array(
+			'https://api.wordpress.org/core/checksums/1.0/?version=6.5&locale=de_DE' => $this->http_ok( wp_json_encode( array(
+				'checksums' => array( 'wp-includes/version.php' => md5( 'de_DE variant' ) ),
+			) ) ),
+			self::CORE_URL_EN => $this->http_ok( wp_json_encode( array(
+				'checksums' => array( 'wp-includes/version.php' => md5( 'en_US variant' ) ),
+			) ) ),
+		) );
+
+		$out = ChecksumMetrics::build( 'WP SITE' );
+
+		$this->assertStringContainsString( 'type="core",slug="wordpress",version="6.5",status="verified"} 1', $out );
+		$this->assertStringContainsString( 'type="core",slug="wordpress",version="6.5",result="match"} 1', $out );
+	}
+
+	public function test_core_falls_back_to_en_us_when_locale_reference_fails(): void {
+		\Brain\Monkey\Functions\expect( 'get_plugins' )->andReturn( array() );
+		\Brain\Monkey\Functions\expect( 'get_locale' )->andReturn( 'de_DE' );
+		$this->make_file( ABSPATH . 'wp-includes/cs-test.php', 'core content' );
+		$this->stub_http( array(
+			'https://api.wordpress.org/core/checksums/1.0/?version=6.5&locale=de_DE' => array( 'response' => array( 'code' => 404 ), 'body' => 'Not found' ),
+			self::CORE_URL_EN => $this->http_ok( wp_json_encode( array(
+				'checksums' => array( 'wp-includes/cs-test.php' => md5( 'core content' ) ),
+			) ) ),
+		) );
+
+		$out = ChecksumMetrics::build( 'WP SITE' );
+
+		$this->assertStringContainsString( 'type="core",slug="wordpress",version="6.5",status="verified"} 1', $out );
+	}
+
+	public function test_core_unavailable_only_when_both_references_fail(): void {
+		\Brain\Monkey\Functions\expect( 'get_plugins' )->andReturn( array() );
+		\Brain\Monkey\Functions\expect( 'get_locale' )->andReturn( 'de_DE' );
+		$this->stub_http( array(
+			'https://api.wordpress.org/core/checksums/1.0/?version=6.5&locale=de_DE' => array( 'response' => array( 'code' => 404 ), 'body' => 'Not found' ),
+			self::CORE_URL_EN => array( 'response' => array( 'code' => 404 ), 'body' => 'Not found' ),
+		) );
+
+		$out = ChecksumMetrics::build( 'WP SITE' );
+
+		$this->assertStringContainsString( 'type="core",slug="wordpress",version="6.5",status="unavailable"} 0', $out );
 	}
 
 	// -----------------------------------------------------------------------
@@ -318,6 +389,27 @@ class ChecksumMetricsTest extends TestCase_Base {
 		$out = ChecksumMetrics::build( 'WP SITE' );
 
 		$this->assertStringContainsString( 'type="plugin",slug="no-version",version="",status="unavailable"} 0', $out );
+	}
+
+	public function test_plugin_accepts_any_of_multiple_official_hashes(): void {
+		\Brain\Monkey\Functions\expect( 'get_locale' )->andReturn( 'en_US' );
+		\Brain\Monkey\Functions\expect( 'get_plugins' )->andReturn( array(
+			'akismet/akismet.php' => array( 'Version' => '5.3' ),
+		) );
+		$this->make_file( WP_PLUGIN_DIR . '/akismet/readme.txt', 'variant two' );
+		$this->stub_http( array(
+			self::CORE_URL_EN => $this->http_ok( wp_json_encode( array( 'checksums' => array() ) ) ),
+			self::AKISMET_URL => $this->plugin_response( array(
+				'readme.txt' => array(
+					'md5'    => array( md5( 'variant one' ), md5( 'variant two' ) ),
+					'sha256' => array( hash( 'sha256', 'variant one' ), hash( 'sha256', 'variant two' ) ),
+				),
+			) ),
+		) );
+
+		$out = ChecksumMetrics::build( 'WP SITE' );
+
+		$this->assertStringContainsString( 'type="plugin",slug="akismet",version="5.3",status="verified"} 1', $out );
 	}
 
 	// -----------------------------------------------------------------------

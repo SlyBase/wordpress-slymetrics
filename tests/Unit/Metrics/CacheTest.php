@@ -76,10 +76,11 @@ class CacheTest extends TestCase_Base {
 		unset( $GLOBALS['slymetrics_test_transients']['slymetrics_cache'] );
 		$this->assertSame( $first, Cache::get() );
 
-		// After the tier expires the change is picked up (missing file => modified).
+		// After the tier expires the change is picked up (the listed file does
+		// not exist => it shows up in the missing count).
 		unset( $GLOBALS['slymetrics_test_transients']['slymetrics_checksum_cache'] );
 		unset( $GLOBALS['slymetrics_test_transients']['slymetrics_cache'] );
-		$this->assertStringContainsString( 'status="modified"} 0', Cache::get() );
+		$this->assertStringContainsString( 'result="missing"} 1', Cache::get() );
 	}
 
 	public function test_flush_removes_checksum_tier(): void {
