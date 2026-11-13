@@ -37,6 +37,19 @@ class Cache {
     const TTL_CHECKSUM = 3600;
 
     /**
+     * Return the static-tier cache key for the current WP/PHP versions.
+     *
+     * Versioning the key means the static tier is automatically rebuilt
+     * after a WordPress core update (or PHP version change) without
+     * waiting for the 60-minute TTL — the stale key simply never matches.
+     *
+     * @return string
+     */
+    private static function static_key(): string {
+        return self::KEY_STATIC . '_wp' . get_bloginfo( 'version' ) . '_php' . (string) PHP_MAJOR_VERSION . (string) PHP_MINOR_VERSION;
+    }
+
+    /**
      * Return cached metrics or rebuild and cache them.
      *
      * @return string Complete Prometheus exposition output.
@@ -59,7 +72,8 @@ class Cache {
         delete_transient( self::KEY );
         delete_transient( self::KEY . '_fast' );
         delete_transient( self::KEY_HEAVY );
-        delete_transient( self::KEY_STATIC );
+        delete_transient( self::KEY_STATIC ); // legacy unversioned key
+        delete_transient( self::static_key() );
         delete_transient( self::KEY_CHECKSUM );
     }
 
@@ -104,10 +118,11 @@ class Cache {
         $out .= $heavy;
 
         // Static tier
-        $static = get_transient( self::KEY_STATIC );
+        $static_key = self::static_key();
+        $static = get_transient( $static_key );
         if ( false === $static ) {
             $static = StaticMetrics::build( $site_name );
-            set_transient( self::KEY_STATIC, $static, self::TTL_STATIC );
+            set_transient( $static_key, $static, self::TTL_STATIC );
         }
         $out .= $static;
 

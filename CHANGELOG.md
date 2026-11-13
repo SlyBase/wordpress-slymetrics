@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.6.0-beta.2]
+### Fixes
+- The static metrics cache tier (WordPress version, PHP version, PHP config) is now keyed by the current WP and PHP version. After a core update the cache rebuilds on the first request instead of serving the stale version for up to 60 minutes.
+
 ## [1.6.0]
 ### Features
 - New file-integrity metrics: `wordpress_checksum_valid` and `wordpress_checksum_files_total` verify WordPress core and installed plugin files against the official wordpress.org checksums and report `verified`, `modified`, or `unavailable` (e.g. for custom plugins without official checksums).
@@ -11,6 +15,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changes
 - Checksum results are cached for one hour and re-verified immediately after core or plugin updates; official checksum documents are cached for 24 hours with a 20-second fetch budget, so scrapes stay fast and external calls stay bounded.
 - Missing files (e.g. removed bundled themes) are reported separately and do not raise integrity alarms; only modified file content does.
+
+### Fixes
+- Core update status (`update_available` in the `wordpress_version` metric and in the MCP `metrics/get-site-health` ability) is now detected on front-end requests too. It was always `0`/`false` because `get_core_updates()` only exists in wp-admin; the `update_core` transient is now read directly.
+- The static metrics cache tier (WordPress version, PHP version, PHP config) is now keyed by the current WP and PHP version. After a core update the cache rebuilds on the first request instead of serving the stale version for up to 60 minutes.
+
+### Security
+- Rate-limit transient keys now use SHA-256 instead of MD5 (Snyk `php/InsecureHash`). The key is only a cache identifier; existing rate-limit counters reset once on upgrade.
 
 ## [1.5.2]
 ### Fixes
