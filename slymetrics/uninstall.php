@@ -36,6 +36,7 @@ function slymetrics_uninstall_cleanup() {
         'slymetrics_cache',
         'slymetrics_heavy_cache',
         'slymetrics_static_cache',
+        'slymetrics_checksum_cache',
         'slymetrics_media_count',
     );
 

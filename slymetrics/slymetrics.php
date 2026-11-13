@@ -3,7 +3,7 @@
  * Plugin Name: SlyMetrics - Metrics Exporter for Prometheus and MCP
  * Plugin URI: https://github.com/slybase/wordpress-slymetrics
  * Description: Export comprehensive WordPress metrics in Prometheus format and MCP for monitoring and observability.
- * Version: 1.5.2
+ * Version: 1.6.0
  * Requires at least: 5.0
  * Requires PHP: 7.4
  * Author: Timon Först
@@ -44,6 +44,7 @@ $slymetrics_src_files = array(
     'Metrics/Builder/ContentMetrics.php',
     'Metrics/Builder/HeavyMetrics.php',
     'Metrics/Builder/StaticMetrics.php',
+    'Metrics/Builder/ChecksumMetrics.php',
     'Metrics/Cache.php',
     'Endpoint/Router.php',
     'Endpoint/RestHandler.php',
@@ -91,6 +92,8 @@ if ( ! class_exists( 'SlyMetrics_Plugin' ) ) {
         const CACHE_TTL_HEAVY  = \SlyMetrics\Metrics\Cache::TTL_HEAVY;
         const CACHE_KEY_STATIC = \SlyMetrics\Metrics\Cache::KEY_STATIC;
         const CACHE_TTL_STATIC = \SlyMetrics\Metrics\Cache::TTL_STATIC;
+        const CACHE_KEY_CHECKSUM = \SlyMetrics\Metrics\Cache::KEY_CHECKSUM;
+        const CACHE_TTL_CHECKSUM = \SlyMetrics\Metrics\Cache::TTL_CHECKSUM;
 
         // -----------------------------------------------------------------------
         // Public methods (used by WordPress hooks and tests)

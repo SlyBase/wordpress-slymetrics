@@ -5,6 +5,7 @@ namespace SlyMetrics\Metrics;
 defined( 'ABSPATH' ) || exit;
 
 use SlyMetrics\Metrics\Builder\ContentMetrics;
+use SlyMetrics\Metrics\Builder\ChecksumMetrics;
 use SlyMetrics\Metrics\Builder\HeavyMetrics;
 use SlyMetrics\Metrics\Builder\PluginMetrics;
 use SlyMetrics\Metrics\Builder\PostMetrics;
@@ -32,6 +33,9 @@ class Cache {
     const KEY_STATIC = 'slymetrics_static_cache';
     const TTL_STATIC = 3600;
 
+    const KEY_CHECKSUM = 'slymetrics_checksum_cache';
+    const TTL_CHECKSUM = 3600;
+
     /**
      * Return cached metrics or rebuild and cache them.
      *
@@ -56,6 +60,15 @@ class Cache {
         delete_transient( self::KEY . '_fast' );
         delete_transient( self::KEY_HEAVY );
         delete_transient( self::KEY_STATIC );
+        delete_transient( self::KEY_CHECKSUM );
+    }
+
+    /**
+     * Invalidate only the checksum tier (called after core/plugin updates so
+     * the next scrape verifies the new files immediately).
+     */
+    public static function flush_checksum(): void {
+        delete_transient( self::KEY_CHECKSUM );
     }
 
     // -----------------------------------------------------------------------
@@ -97,6 +110,14 @@ class Cache {
             set_transient( self::KEY_STATIC, $static, self::TTL_STATIC );
         }
         $out .= $static;
+
+        // Checksum tier (issue #9): core + plugin file integrity, 1 h cache.
+        $checksum = get_transient( self::KEY_CHECKSUM );
+        if ( false === $checksum ) {
+            $checksum = ChecksumMetrics::build( $site_name );
+            set_transient( self::KEY_CHECKSUM, $checksum, self::TTL_CHECKSUM );
+        }
+        $out .= $checksum;
 
         return $out;
     }

@@ -10,7 +10,7 @@ description: 'Changelog, readme and version management rules for every code chan
 After **every** code change, update both changelog files:
 
 - `CHANGELOG.md` (repository root) is the canonical changelog in Markdown.
-- `slytranslate/changelog.txt` is the plain-text mirror (text content only; no Markdown headings/tables/links).
+- `slymetrics/changelog.txt` is the plain-text mirror (text content only; no Markdown headings/tables/links).
 
 ### Version block rules
 
@@ -36,7 +36,7 @@ Group entries within a version block by category. Use exactly these three catego
 - <Bug fix>
 ```
 
-`slytranslate/changelog.txt`:
+`slymetrics/changelog.txt`:
 
 ```txt
 = X.Y.Z =
@@ -65,16 +65,16 @@ Each entry should be one short sentence. Strip implementation details, internal 
 
 For **major feature changes or additions** (for example new/changed/removed abilities or other relevant behavior changes), both files must be updated:
 
-- `slytranslate/readme.txt` - update sections `== Description ==`, `== Frequently Asked Questions ==`, and the abilities list.
+- `slymetrics/readme.txt` - update sections `== Description ==`, `== Frequently Asked Questions ==`, and the abilities list.
 - `README.md` (root) - mirror the same content in the corresponding sections.
 
 The shared documentation sections must be identical.
-Changelog entries are maintained in `CHANGELOG.md` and `slytranslate/changelog.txt`.
+Changelog entries are maintained in `CHANGELOG.md` and `slymetrics/changelog.txt`.
 
 ## 4) readme.txt in WordPress.org format (important for LLMs)
 
 `readme.txt` in the Plugin Directory follows its own parser-driven format and **not** the usual GitHub README style.
-When an LLM generates content for `slytranslate/readme.txt`, it must follow these rules:
+When an LLM generates content for `slymetrics/readme.txt`, it must follow these rules:
 
 - **Strictly follow filename and heading syntax:**
 	- Title line: `=== Plugin Name ===`
@@ -110,7 +110,7 @@ When an LLM generates content for `slytranslate/readme.txt`, it must follow thes
 	- The Plugin Directory first reads `Stable tag` from `/trunk/readme.txt`
 	- It then uses `readme.txt` from `/tags/<Stable tag>/` for display
 	- Avoid `Stable tag: trunk` (not recommended)
-	- The displayed download version comes from the plugin header in `ai-translate.php`, not from `readme.txt`
+	- The displayed download version comes from the plugin header in `slymetrics.php`, not from `readme.txt`
 - **WordPress 5.8+ detail:**
 	- `Requires at least` and `Requires PHP` are read from the main PHP file, not from `readme.txt`
 - **Keep the file concise:**
@@ -163,12 +163,11 @@ Short upgrade note.
 A version number may only be incremented when code has actually changed.
 For documentation-only, prompt-only, instruction-only, or other non-code changes, **do not** bump the version.
 
-If a code change explicitly specifies a version number (for example `1.4.0`), **all three** locations below must be updated in sync:
+If a code change explicitly specifies a version number (for example `1.4.0`), **all** locations below must be updated in sync:
 
 For beta versions (`X.Y.Z-beta.N`), use the base version `X.Y.Z` for this synchronization as well.
 
 | File | Field |
 |---|---|
-| `slytranslate/readme.txt` | `Stable tag: X.Y.Z` |
-| `slytranslate/ai-translate.php` | Plugin header `Version: X.Y.Z` |
-| `slytranslate/ai-translate.php` | Class constant `private const VERSION = 'X.Y.Z';` |
+| `slymetrics/readme.txt` | `Stable tag: X.Y.Z` |
+| `slymetrics/slymetrics.php` | Plugin header `Version: X.Y.Z` |

@@ -47,6 +47,9 @@ class Plugin {
         add_action( 'parse_request', array( Router::class, 'handle_metrics_request' ) );
         add_action( 'admin_init',    array( Router::class, 'maybe_flush_rewrite_rules' ) );
 
+        // Re-verify file integrity right after core/plugin updates (issue #9)
+        add_action( 'upgrader_process_complete', array( Cache::class, 'flush_checksum' ) );
+
         // Bootstrap
         add_action( 'init', array( self::class, 'ensure_initialized' ), 1 );
         add_action( 'init', array( self::class, 'load_textdomain' ) );

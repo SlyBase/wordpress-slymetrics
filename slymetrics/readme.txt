@@ -3,7 +3,7 @@ Contributors: timonf
 Tags: prometheus, metrics, monitoring, observability, performance, mcp
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.5.2
+Stable tag: 1.6.0
 Requires PHP: 7.4
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -23,8 +23,9 @@ The SlyMetrics WordPress plugin is a powerful monitoring plugin that exports com
 * **MCP Integration** - Expose metrics via the WordPress MCP Adapter as AI agent tools (WP 6.9+): metrics/get-summary, metrics/get-users, metrics/get-posts, metrics/get-plugins, metrics/get-site-health, metrics/get-content, metrics/get-storage, metrics/get-health-checks
 * **Site Health Integration** - WordPress Site Health API integration for security and performance monitoring
 * **Directory Size Monitoring** - Track uploads, themes, and plugins directory sizes with intelligent caching
+* **File Integrity Monitoring** - Verify core and plugin files against official wordpress.org checksums
 * **REST API Integration** - Uses native WordPress REST API with enhanced security
-* **Performance Optimization** - 3-tier caching system with lazy loading and memory optimization
+* **Performance Optimization** - 4-tier caching system with lazy loading and memory optimization
 * **Enterprise Security** - Input validation, SQL injection prevention, XSS protection, and security headers
 * **Environment Variable Support** - Enhanced security with external encryption key management
 * **Admin Interface** - User-friendly settings page with token management
@@ -40,6 +41,7 @@ The SlyMetrics WordPress plugin is a powerful monitoring plugin that exports com
 * Plugin and theme information
 * Comment statistics
 * WordPress version and update status
+* Core and plugin file integrity (official checksums)
 * Database and directory sizes
 * PHP configuration details
 * Site health check results
@@ -67,7 +69,7 @@ The SlyMetrics WordPress plugin is a powerful monitoring plugin that exports com
 
 **Performance Features:**
 
-* 3-tier intelligent caching strategy
+* 4-tier intelligent caching strategy
 * Lazy loading for heavy operations
 * Memory-optimized data structures
 * Database query optimization
@@ -146,6 +148,14 @@ Yes! All metrics include site labels, making it perfect for monitoring multi-sit
 
 == Changelog ==
 
+= 1.6.0 =
+Features:
+* New file-integrity metrics: wordpress_checksum_valid and wordpress_checksum_files_total verify WordPress core and installed plugin files against the official wordpress.org checksums and report verified, modified, or unavailable (e.g. for custom plugins without official checksums).
+
+Changes:
+* Checksum results are cached for one hour and re-verified immediately after core or plugin updates; official checksum documents are cached for 24 hours with a 20-second fetch budget, so scrapes stay fast and external calls stay bounded.
+* Missing files (e.g. removed bundled themes) are reported separately and do not raise integrity alarms; only modified file content does.
+
 = 1.5.2 =
 Fixes:
 * Core update status (update_available in the wordpress_version metric and in the MCP metrics/get-site-health ability) is now detected on front-end requests too. It was always 0/false because get_core_updates() only exists in wp-admin; the update_core transient is now read directly.
@@ -167,6 +177,9 @@ Features:
 * Add three new MCP abilities exposing all remaining Prometheus metrics: metrics/get-content (comments, categories, media, tags), metrics/get-storage (autoload options, database size, directory sizes), and metrics/get-health-checks (site health check summary and individual test results).
 
 == Upgrade Notice ==
+
+= 1.6.0 =
+Adds checksum integrity metrics for WordPress core and plugins. No breaking changes; update is safe for all installations.
 
 = 1.5.2 =
 Fixes the update_available label of wordpress_version always showing 0. Recommended for anyone alerting on pending WordPress core updates.
