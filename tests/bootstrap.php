@@ -221,7 +221,8 @@ if ( ! function_exists( 'delete_transient' ) ) {
 }
 if ( ! function_exists( 'get_site_transient' ) ) {
     function get_site_transient( string $transient ): mixed {
-        return false;
+        // Tests set $GLOBALS['slymetrics_test_transients'][ $name ] to override (functions here cannot be stubbed).
+        return $GLOBALS['slymetrics_test_transients'][ $transient ] ?? false;
     }
 }
 if ( ! function_exists( 'current_user_can' ) ) {

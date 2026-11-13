@@ -27,6 +27,7 @@ abstract class TestCase_Base extends TestCase {
     }
 
     protected function tearDown(): void {
+        unset( $GLOBALS['slymetrics_test_transients'] );
         Monkey\tearDown();
         parent::tearDown();
     }

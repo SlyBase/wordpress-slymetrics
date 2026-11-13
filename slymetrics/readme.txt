@@ -3,7 +3,7 @@ Contributors: timonf
 Tags: prometheus, metrics, monitoring, observability, performance, mcp
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.5.1
+Stable tag: 1.5.2
 Requires PHP: 7.4
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -146,6 +146,10 @@ Yes! All metrics include site labels, making it perfect for monitoring multi-sit
 
 == Changelog ==
 
+= 1.5.2 =
+Fixes:
+* Core update status (update_available in the wordpress_version metric and in the MCP metrics/get-site-health ability) is now detected on front-end requests too. It was always 0/false because get_core_updates() only exists in wp-admin; the update_core transient is now read directly.
+
 = 1.5.1 =
 Fixes:
 * Metrics endpoint no longer sends a broken Content-Type header (empty charset) on sites where the blog_charset option is empty, which caused Prometheus to permanently fail the scrape.
@@ -157,6 +161,9 @@ Features:
 * Add three new MCP abilities exposing all remaining Prometheus metrics: metrics/get-content (comments, categories, media, tags), metrics/get-storage (autoload options, database size, directory sizes), and metrics/get-health-checks (site health check summary and individual test results).
 
 == Upgrade Notice ==
+
+= 1.5.2 =
+Fixes the update_available label of wordpress_version always showing 0. Recommended for anyone alerting on pending WordPress core updates.
 
 = 1.5.1 =
 Fixes broken Prometheus scrapes on sites with an empty blog_charset option. Recommended for anyone seeing TargetDown for the metrics endpoint.

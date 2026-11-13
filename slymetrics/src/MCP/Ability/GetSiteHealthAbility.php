@@ -4,6 +4,8 @@ namespace SlyMetrics\MCP\Ability;
 
 defined( 'ABSPATH' ) || exit;
 
+use SlyMetrics\Util\CoreUpdate;
+
 /**
  * Ability: metrics/get-site-health
  *
@@ -53,17 +55,7 @@ class GetSiteHealthAbility {
         global $wpdb;
 
         $wp_version       = get_bloginfo( 'version' );
-        $update_available = false;
-
-        if ( ! wp_installing() && function_exists( 'get_core_updates' ) ) {
-            $core_updates = get_core_updates();
-            if ( is_array( $core_updates ) && ! empty( $core_updates ) ) {
-                $latest = $core_updates[0];
-                if ( isset( $latest->response ) && $latest->response === 'upgrade' ) {
-                    $update_available = true;
-                }
-            }
-        }
+        $update_available = CoreUpdate::is_available();
 
         $db_version = isset( $wpdb ) && method_exists( $wpdb, 'db_version' )
             ? $wpdb->db_version()

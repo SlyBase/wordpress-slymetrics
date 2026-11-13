@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.5.2]
+### Fixes
+- Core update status (`update_available` in the `wordpress_version` metric and in the MCP `metrics/get-site-health` ability) is now detected on front-end requests too. It was always `0`/`false` because `get_core_updates()` only exists in wp-admin; the `update_core` transient is now read directly.
+
 ## [1.5.1]
 ### Fixes
 - Metrics endpoint no longer sends a broken `Content-Type` header (empty `charset`) on sites where the `blog_charset` option is empty, which caused Prometheus to permanently fail the scrape.
