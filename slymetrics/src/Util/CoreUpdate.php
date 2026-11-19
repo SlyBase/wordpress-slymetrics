@@ -11,6 +11,9 @@ defined( 'ABSPATH' ) || exit;
  * wp-admin/includes/update.php and does not exist on front-end requests such as
  * the metrics endpoint.
  *
+ * When the transient is empty (wp-cron has not run recently), the check forces
+ * a fresh `wp_version_check()` call so the result reflects the current state.
+ *
  * @package SlyMetrics\Util
  */
 class CoreUpdate {
@@ -24,7 +27,21 @@ class CoreUpdate {
         }
 
         $transient = get_site_transient( 'update_core' );
-        if ( ! is_object( $transient ) || empty( $transient->updates ) || ! is_array( $transient->updates ) ) {
+
+        // Force a fresh check when the transient is empty (wp-cron has not
+        // run recently). wp_version_check() lives in wp-includes/update.php,
+        // which is always loaded on front-end requests.
+        if ( ! is_object( $transient ) ) {
+            if ( function_exists( 'wp_version_check' ) ) {
+                wp_version_check( array(), true );
+                $transient = get_site_transient( 'update_core' );
+            }
+            if ( ! is_object( $transient ) ) {
+                return false;
+            }
+        }
+
+        if ( empty( $transient->updates ) || ! is_array( $transient->updates ) ) {
             return false;
         }
 

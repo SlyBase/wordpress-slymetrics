@@ -2,7 +2,11 @@
 
 All notable changes to this project are documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0).
+
+## [1.6.0-beta.3]
+### Fixes
+- `update_available` now reflects a core update even when the `update_core` transient is empty (e.g. after a downgrade, or when wp-cron has not run recently). The check now forces a fresh `wp_version_check()` call and reads the populated result, so the label matches what `wp core check-update` reports.
 
 ## [1.6.0-beta.2]
 ### Fixes
@@ -18,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixes
 - Core update status (`update_available` in the `wordpress_version` metric and in the MCP `metrics/get-site-health` ability) is now detected on front-end requests too. It was always `0`/`false` because `get_core_updates()` only exists in wp-admin; the `update_core` transient is now read directly.
+- `update_available` now reflects a core update even when the `update_core` transient is empty (e.g. after a downgrade, or when wp-cron has not run recently). The check now forces a fresh `wp_version_check()` call and reads the populated result, so the label matches what `wp core check-update` reports.
 - The static metrics cache tier (WordPress version, PHP version, PHP config) is now keyed by the current WP and PHP version. After a core update the cache rebuilds on the first request instead of serving the stale version for up to 60 minutes.
 
 ### Security

@@ -3,7 +3,7 @@ Contributors: timonf
 Tags: prometheus, metrics, monitoring, observability, performance, mcp
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.6.0
+Stable tag: 1.6.0-beta.3
 Requires PHP: 7.4
 License: MIT
 License URI: https://opensource.org/licenses/MIT
