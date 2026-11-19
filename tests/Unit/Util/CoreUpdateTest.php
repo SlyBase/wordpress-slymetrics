@@ -62,7 +62,7 @@ class CoreUpdateTest extends TestCase_Base {
         Monkey\Functions\expect( 'wp_version_check' )
             ->once()
             ->with( array(), true )
-            ->and_return( function() {
+            ->andReturnUsing( function() {
                 $GLOBALS['slymetrics_test_transients']['update_core'] = (object) array(
                     'updates' => array( (object) array( 'response' => 'upgrade' ) ),
                 );
@@ -81,7 +81,7 @@ class CoreUpdateTest extends TestCase_Base {
         Monkey\Functions\expect( 'wp_version_check' )
             ->once()
             ->with( array(), true )
-            ->and_return( function() {
+            ->andReturnUsing( function() {
                 $GLOBALS['slymetrics_test_transients']['update_core'] = (object) array(
                     'updates' => array( (object) array( 'response' => 'latest' ) ),
                 );
@@ -101,7 +101,7 @@ class CoreUpdateTest extends TestCase_Base {
         Monkey\Functions\expect( 'wp_version_check' )
             ->once()
             ->with( array(), true )
-            ->and_return( null );
+            ->andReturn( null );
 
         $this->assertFalse( CoreUpdate::is_available() );
     }
